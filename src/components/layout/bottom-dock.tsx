@@ -104,7 +104,7 @@ export function BottomDock() {
                       href={item.href}
                       className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
                         isActive
-                          ? "bg-blue-600 text-white shadow-xs font-semibold"
+                          ? "bg-amber-500 text-slate-950 font-bold shadow-xs"
                           : "text-slate-300 hover:text-white hover:bg-slate-800/80"
                       }`}
                     >

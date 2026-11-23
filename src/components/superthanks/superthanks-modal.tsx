@@ -16,6 +16,9 @@ import {
   School,
   Building2,
   Send,
+  Smartphone,
+  Monitor,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,10 +49,12 @@ export function SuperThanksModal({
   const [customAmount, setCustomAmount] = React.useState<number | "">("");
   const [activeTab, setActiveTab] = React.useState<"superthanks" | "institutional">("superthanks");
   const [copiedUpi, setCopiedUpi] = React.useState(false);
+  const [copiedUri, setCopiedUri] = React.useState(false);
   const [utrNumber, setUtrNumber] = React.useState("");
   const [session, setSession] = React.useState<YouPiSession | null>(null);
   const [isVerifying, setIsVerifying] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
+  const [isMobile, setIsMobile] = React.useState(false);
 
   // Institutional form state
   const [instInstitution, setInstInstitution] = React.useState("National Law University");
@@ -57,6 +62,12 @@ export function SuperThanksModal({
   const [instRole, setInstRole] = React.useState("RCC Student Convenor");
   const [instNotes, setInstNotes] = React.useState("");
   const [instSent, setInstSent] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsMobile(/Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent));
+    }
+  }, []);
 
   const activeTierConfig =
     SUPERTHANKS_TIERS.find((t) => t.id === selectedTier) || SUPERTHANKS_TIERS[2];
@@ -84,6 +95,14 @@ export function SuperThanksModal({
     setTimeout(() => setCopiedUpi(false), 2000);
   };
 
+  const handleCopyUri = () => {
+    if (session?.upiUri) {
+      navigator.clipboard.writeText(session.upiUri);
+      setCopiedUri(true);
+      setTimeout(() => setCopiedUri(false), 2000);
+    }
+  };
+
   const handleVerifyUtr = () => {
     if (!session || !utrNumber.trim()) return;
 
@@ -103,7 +122,6 @@ export function SuperThanksModal({
     e.preventDefault();
     setInstSent(true);
     setTimeout(() => {
-      // Award Institutional Contributor badge
       awardContributorBadge({
         id: "badge-institutional-affiliate",
         tier: "institutional",
@@ -120,10 +138,10 @@ export function SuperThanksModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-900 text-slate-100 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-amber-500/30 bg-slate-900 text-slate-100 shadow-2xl">
         {/* Header bar */}
-        <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950/60 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950/70 px-5 py-4">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-amber-500 to-rose-500 text-white shadow-sm">
               <Heart className="h-5 w-5 fill-white" />
@@ -152,22 +170,20 @@ export function SuperThanksModal({
         <div className="flex border-b border-slate-800 bg-slate-950/30 px-5 pt-2">
           <button
             onClick={() => setActiveTab("superthanks")}
-            className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-semibold transition-all ${
-              activeTab === "superthanks"
+            className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-semibold transition-all ${activeTab === "superthanks"
                 ? "border-amber-400 text-amber-300"
                 : "border-transparent text-slate-400 hover:text-slate-200"
-            }`}
+              }`}
           >
             <Sparkles className="h-4 w-4" />
             SuperThanks & Member Stickers
           </button>
           <button
             onClick={() => setActiveTab("institutional")}
-            className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-semibold transition-all ${
-              activeTab === "institutional"
+            className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-semibold transition-all ${activeTab === "institutional"
                 ? "border-blue-400 text-blue-300"
                 : "border-transparent text-slate-400 hover:text-slate-200"
-            }`}
+              }`}
           >
             <School className="h-4 w-4" />
             Institutional Response / NLU RCC Grant
@@ -189,7 +205,7 @@ export function SuperThanksModal({
                   </h3>
                   <p className="text-sm text-slate-300 mt-1 max-w-md mx-auto">
                     Your contribution directly supports open scrapers for High Courts and Supreme Court chambers.
-                    Your YouTube-style member sticker has been pinned to your profile and navigation bar!
+                    Your YouTube-style member sticker has been pinned to your profile and navigation dock!
                   </p>
                 </div>
 
@@ -232,14 +248,13 @@ export function SuperThanksModal({
                             setSelectedTier(tier.id);
                             setCustomAmount("");
                           }}
-                          className={`relative p-3 rounded-xl border text-left transition-all ${
-                            isSelected
+                          className={`relative p-3 rounded-xl border text-left transition-all ${isSelected
                               ? "border-amber-400 bg-amber-500/15 ring-2 ring-amber-400/30"
                               : "border-slate-800 bg-slate-800/40 hover:bg-slate-800/80 hover:border-slate-700"
-                          }`}
+                            }`}
                         >
                           {tier.recommended && (
-                            <span className="absolute -top-2 right-2 bg-gradient-to-r from-amber-500 to-rose-500 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full uppercase">
+                            <span className="absolute -top-2 right-2 bg-gradient-to-r from-amber-500 to-rose-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase">
                               Popular
                             </span>
                           )}
@@ -271,7 +286,8 @@ export function SuperThanksModal({
                       />
                       <div className="absolute inset-0 border-2 border-amber-400/60 rounded-2xl pointer-events-none" />
                     </div>
-                    <span className="text-[11px] text-slate-400 mt-2 font-mono">
+                    <span className="text-[11px] text-slate-400 mt-2 font-mono flex items-center gap-1">
+                      <Smartphone className="h-3 w-3 text-amber-400" />
                       Scan with any UPI app (GPay / PhonePe / Paytm / BHIM)
                     </span>
                   </div>
@@ -312,23 +328,68 @@ export function SuperThanksModal({
                       </div>
                     </div>
 
-                    {/* Direct UPI Intent Link for Mobile users */}
-                    {session && (
-                      <a
-                        href={session.upiUri}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="block"
-                      >
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full text-xs border-amber-500/40 hover:bg-amber-500/10 text-amber-300 flex items-center justify-center gap-1.5"
+                    {/* Desktop vs Mobile smart UPI action */}
+                    {isMobile ? (
+                      session && (
+                        <a
+                          href={session.upiUri}
+                          className="block"
                         >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                          <span>Tap to Pay on UPI Mobile App</span>
-                        </Button>
-                      </a>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full text-xs border-amber-500/40 hover:bg-amber-500/10 text-amber-300 flex items-center justify-center gap-1.5"
+                          >
+                            <Smartphone className="h-3.5 w-3.5" />
+                            <span>Tap to Pay on UPI Mobile App</span>
+                          </Button>
+                        </a>
+                      )
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="p-2.5 rounded-lg bg-slate-900/90 border border-amber-500/20 text-xs text-slate-300 flex items-start gap-2">
+                          <Monitor className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-semibold text-white block">Desktop Browser Note</span>
+                            <span className="text-[11px] text-slate-400">
+                              Desktop OS doesn’t handle <code className="text-amber-300">upi://</code> links directly. Please scan the QR code with your mobile UPI app, or copy the payment URL.
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            onClick={handleCopyUri}
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 text-xs border-slate-700 hover:bg-slate-800 text-slate-200 flex items-center justify-center gap-1.5"
+                          >
+                            {copiedUri ? (
+                              <Check className="h-3.5 w-3.5 text-emerald-400" />
+                            ) : (
+                              <Copy className="h-3.5 w-3.5 text-amber-400" />
+                            )}
+                            <span>{copiedUri ? "Copied UPI Link" : "Copy Payment Link"}</span>
+                          </Button>
+
+                          {session && (
+                            <a
+                              href={session.upiUri}
+                              className="shrink-0"
+                              title="Try opening UPI protocol handler if registered"
+                            >
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-xs text-slate-400 hover:text-white"
+                              >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </Button>
+                            </a>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -350,7 +411,7 @@ export function SuperThanksModal({
                       placeholder="e.g. 432109876543 or bank reference"
                       value={utrNumber}
                       onChange={(e) => setUtrNumber(e.target.value)}
-                      className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
+                      className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 font-mono"
                     />
                     <Button
                       onClick={handleVerifyUtr}
@@ -378,94 +439,93 @@ export function SuperThanksModal({
             /* Institutional Collaboration / Response View */
             <div className="space-y-4">
               {instSent ? (
-                <div className="p-6 rounded-xl bg-slate-950 border border-emerald-500/40 text-center space-y-3">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400">
+                <div className="p-6 text-center space-y-3 rounded-xl bg-slate-950 border border-blue-500/30">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/20 text-blue-400">
                     <Check className="h-6 w-6" />
                   </div>
-                  <h3 className="text-base font-bold text-white">
-                    Institutional Response Registered
-                  </h3>
+                  <h4 className="text-base font-bold text-white">
+                    Institutional Response Registered!
+                  </h4>
                   <p className="text-xs text-slate-300 max-w-md mx-auto">
-                    We have received your institutional partnership proposal for {instInstitution}.
-                    Our research team at NLU Delhi will review and allocate academic grant quotas for
-                    your batch.
+                    We have granted your session Institutional Partner privileges. Our NLU Delhi student convenor team will liaise with your college placement cell ({instInstitution}) within 24 hours.
                   </p>
                   <Button
                     onClick={onClose}
-                    size="sm"
-                    className="bg-slate-800 text-white hover:bg-slate-700 text-xs mt-2"
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs mt-2"
                   >
-                    Close
+                    Enter Workspace as Institutional Affiliate
                   </Button>
                 </div>
               ) : (
                 <form onSubmit={handleInstitutionalSubmit} className="space-y-4">
-                  <div className="p-3.5 rounded-xl bg-blue-950/40 border border-blue-800/40 text-xs text-blue-200">
-                    <strong>Institutional Scheme:</strong> Instead of individual commercial
-                    billing, we support university-wide access grants via Student Bar Councils,
-                    Recruitment Coordination Committees (RCCs), and faculty allocations.
+                  <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300 space-y-1">
+                    <span className="font-bold block">Academic Grant & RCC Access Protocol</span>
+                    <p className="text-blue-200/80">
+                      JurisFlow does not charge commercial subscription fees to law colleges. RCCs and student bar associations obtain cohort-wide access through educational research grants and reciprocity.
+                    </p>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-300">
-                      Law University / Institution Name
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={instInstitution}
-                      onChange={(e) => setInstInstitution(e.target.value)}
-                      placeholder="e.g. NLU Delhi, NLSIU Bengaluru, NALSAR, etc."
-                      className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-blue-400 focus:outline-none"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-300">
-                        Convenor / Dean / Chamber Head Email
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs font-semibold text-slate-300 block mb-1">
+                        Law College / University Name
                       </label>
                       <input
-                        type="email"
+                        type="text"
                         required
-                        value={instContact}
-                        onChange={(e) => setInstContact(e.target.value)}
-                        placeholder="e.g. rcc@nludelhi.ac.in"
+                        value={instInstitution}
+                        onChange={(e) => setInstInstitution(e.target.value)}
+                        placeholder="e.g. NALSAR, NLSIU, WBNUJS, Faculty of Law DU"
                         className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-blue-400 focus:outline-none"
                       />
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-300">
-                        Applicant Designation
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-semibold text-slate-300 block mb-1">
+                          Official Contact Email / WhatsApp
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={instContact}
+                          onChange={(e) => setInstContact(e.target.value)}
+                          placeholder="rcc@nlu.ac.in or +91 98..."
+                          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-blue-400 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-slate-300 block mb-1">
+                          Role / Representation
+                        </label>
+                        <select
+                          value={instRole}
+                          onChange={(e) => setInstRole(e.target.value)}
+                          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white focus:border-blue-400 focus:outline-none"
+                        >
+                          <option value="RCC Student Convenor">RCC Student Convenor</option>
+                          <option value="Placement Cell Faculty Head">Placement Cell Faculty Head</option>
+                          <option value="Student Bar Association President">Student Bar Association President</option>
+                          <option value="Chamber Practice Manager">Chamber Practice Manager</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-slate-300 block mb-1">
+                        Cohort Size & Requirements
                       </label>
-                      <select
-                        value={instRole}
-                        onChange={(e) => setInstRole(e.target.value)}
-                        className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white focus:border-blue-400 focus:outline-none"
-                      >
-                        <option value="RCC Student Convenor">RCC Student Convenor</option>
-                        <option value="Placement Cell Faculty Advisor">Placement Faculty Advisor</option>
-                        <option value="Senior Advocate Chamber Manager">Senior Advocate Chamber</option>
-                        <option value="Student Bar Association President">SBA President</option>
-                        <option value="Student Researcher">Student Researcher</option>
-                      </select>
+                      <textarea
+                        rows={3}
+                        value={instNotes}
+                        onChange={(e) => setInstNotes(e.target.value)}
+                        placeholder="Approx. 120 students in Batch of 2027 requiring High Court clerkship tracking..."
+                        className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-blue-400 focus:outline-none"
+                      />
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-300">
-                      Batch Size & Custom Requirement Notes
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={instNotes}
-                      onChange={(e) => setInstNotes(e.target.value)}
-                      placeholder="Mention expected batch size, High Court benches of interest, or custom chamber application templates..."
-                      className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-blue-400 focus:outline-none"
-                    />
-                  </div>
-
-                  <div className="flex justify-end gap-2 pt-2">
+                  <div className="flex items-center justify-end gap-2 pt-2">
                     <Button
                       type="button"
                       variant="ghost"
@@ -476,10 +536,10 @@ export function SuperThanksModal({
                     </Button>
                     <Button
                       type="submit"
-                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs flex items-center gap-1.5"
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5"
                     >
                       <Send className="h-3.5 w-3.5" />
-                      Submit Institutional Response
+                      <span>Submit Institutional Response</span>
                     </Button>
                   </div>
                 </form>

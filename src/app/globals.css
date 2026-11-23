@@ -1,30 +1,72 @@
 @import "tailwindcss";
 
+/* ============================================================
+   JurisFlow Design System — Sand Golden & Cosmic Space Themes
+   Inspired by djlexfolio.tech and Research-Tool
+   ============================================================ */
+
 :root {
-  --background: #F8FAFC;
-  --foreground: #0F172A;
-  --accent: #3B82F6;
-  --success: #10B981;
-  --warning: #F59E0B;
+  /* Default: Sand Golden (Light Warm Mode) */
+  --bg-primary: #fcf9f2;
+  --bg-surface: #ffffff;
+  --bg-surface-hover: #f5f0e4;
+  --bg-surface-elevated: #efe8d5;
+  --text-primary: #1e1b16;
+  --text-secondary: #574f42;
+  --text-muted: #827867;
+  --border-subtle: #e5decb;
+  --border-strong: #c9bc9e;
+  --accent-gold: #c2831c;
+  --accent-gold-hover: #a86e13;
+  --accent-gold-bg: rgba(194, 131, 28, 0.1);
+  --accent-blue: #2563eb;
+  --accent-emerald: #059669;
+  --card-shadow: 0 4px 20px -2px rgba(100, 75, 20, 0.07);
+  --card-shadow-lg: 0 12px 36px -4px rgba(100, 75, 20, 0.12);
+}
+
+/* Cosmic Space (Dark Mode) */
+:root.dark,
+:root[data-theme="cosmic-space"] {
+  --bg-primary: #040711;
+  --bg-surface: #0a1122;
+  --bg-surface-hover: #121d38;
+  --bg-surface-elevated: #172445;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --accent-gold: #fbbf24;
+  --accent-gold-hover: #f59e0b;
+  --accent-gold-bg: rgba(251, 191, 36, 0.12);
+  --accent-blue: #3b82f6;
+  --accent-emerald: #10b981;
+  --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  --card-shadow-lg: 0 16px 48px -4px rgba(0, 0, 0, 0.7);
 }
 
 html {
   scroll-behavior: smooth;
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.25s ease, color 0.25s ease;
+  min-height: 100vh;
 }
 
 ::selection {
-  background-color: rgba(59, 130, 246, 0.2);
+  background-color: rgba(217, 155, 38, 0.25);
+  color: inherit;
 }
 
-/* Custom scrollbar */
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
@@ -32,10 +74,45 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
+  background: var(--border-strong);
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--accent-gold);
+}
+
+/* ── LAYOUT DATA-ATTRIBUTES (Transformable Navigation) ─── */
+[data-layout="right"] .main-shell {
+  margin-left: 0;
+  margin-right: 256px;
+}
+
+[data-layout="top"] .main-shell {
+  margin-left: 0;
+  margin-right: 0;
+  padding-top: 1rem;
+}
+
+[data-layout="dock"] .main-shell {
+  margin-left: 0;
+  margin-right: 0;
+  padding-bottom: 5rem;
+}
+
+[data-collapsed="true"][data-layout="left"] .main-shell {
+  margin-left: 72px;
+}
+
+[data-collapsed="true"][data-layout="right"] .main-shell {
+  margin-right: 72px;
+}
+
+/* Cosmic particle glow */
+.cosmic-glow {
+  background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 60%);
+}
+
+.sand-glow {
+  background: radial-gradient(circle at 50% 0%, rgba(217, 155, 38, 0.12) 0%, transparent 60%);
 }

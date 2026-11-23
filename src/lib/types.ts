@@ -98,6 +98,10 @@ export interface Opportunity {
   isBookmarked: boolean;
   status: ApplicationStatus;
   tags: string[];
+  stipend?: string;
+  eligibility?: string;
+  timingStatus?: "Closing Soon" | "Newly Opened" | "Opening Soon" | "Rolling";
+  isClosingSoon?: boolean;
 }
 
 export interface Application {

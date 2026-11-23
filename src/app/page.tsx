@@ -28,6 +28,10 @@ import {
   ExternalLink,
   Copy,
   Check,
+  Sun,
+  Moon,
+  Send,
+  SlidersHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +41,8 @@ import { PRIMARY_UPI_ID, SUPERTHANKS_TIERS } from "@/lib/payment-youpi";
 import { MembershipSticker } from "@/components/ui/membership-sticker";
 import { getActiveUser, subscribeToAuth } from "@/lib/firebase";
 import { User, ContributorTier } from "@/lib/types";
+import { useTheme } from "@/lib/theme-context";
+import { SwipeWalkthrough } from "@/components/onboarding/swipe-walkthrough";
 
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = React.useState<number | null>(0);
@@ -44,6 +50,8 @@ export default function LandingPage() {
   const [selectedTier, setSelectedTier] = React.useState<ContributorTier>("gold");
   const [copiedUpi, setCopiedUpi] = React.useState(false);
   const [user, setUser] = React.useState<User | null>(null);
+
+  const { theme, toggleTheme } = useTheme();
 
   React.useEffect(() => {
     const unsub = subscribeToAuth((u) => setUser(u));
@@ -64,7 +72,7 @@ export default function LandingPage() {
   const faqs = [
     {
       q: "What is JurisFlow and why was it built?",
-      a: "JurisFlow is an open legal research and career operating system built by law students at NLU Delhi. It replaces chaotic Excel sheets, fragmented WhatsApp groups, and missed clerkship deadlines with a unified registry tracker, an 8-stage litigation Kanban CRM, and citation-accurate email synthesis.",
+      a: "JurisFlow is an open legal research and career operating system built by law scholars at NLU Delhi. It replaces chaotic Excel sheets, fragmented WhatsApp groups, and missed clerkship deadlines with a unified 15-source registry tracker, an 8-stage litigation Kanban CRM, and citation-accurate email synthesis.",
     },
     {
       q: "Why is there no paywall or forced SaaS subscription?",
@@ -83,8 +91,8 @@ export default function LandingPage() {
       a: "In accordance with strict anti-slop guidelines, JurisFlow eliminates fluffy buzzwords. It weaves candidate-specific legal memory hooks (such as analyzing footnotes before conclusions) and exact citations from recent division bench rulings into every draft.",
     },
     {
-      q: "Can I log in using the pre-authorized NLU Scholar credentials?",
-      a: "Yes. The login portal features a one-click Default Scholar sign-in (mdc18042007@gmail.com / Nlu@1567) backed by Google Cloud Firebase Identity and real-time state synchronization.",
+      q: "How do I access the workspace and is my personal data private?",
+      a: "Every student creates their own private account or explores as a Guest Scholar. No passwords or personal notes are ever exposed publicly. Your applications, CV drafts, and chamber contacts are isolated and synced securely via Google Cloud Firebase.",
     },
   ];
 
@@ -108,14 +116,27 @@ export default function LandingPage() {
           </Link>
 
           <div className="hidden md:flex items-center gap-7 text-xs font-semibold text-slate-300">
+            <a href="#tutorial" className="hover:text-amber-400 transition-colors">Tutorial</a>
             <a href="#features" className="hover:text-amber-400 transition-colors">Features</a>
-            <a href="#judicial" className="hover:text-amber-400 transition-colors">Judicial Center</a>
-            <a href="#superthanks" className="hover:text-amber-400 transition-colors">SuperThanks Tiers</a>
-            <a href="#institutional" className="hover:text-amber-400 transition-colors">Institutional Response</a>
+            <a href="#superthanks" className="hover:text-amber-400 transition-colors">SuperThanks</a>
+            <a href="#institutional" className="hover:text-amber-400 transition-colors">Institutional</a>
             <a href="#faq" className="hover:text-amber-400 transition-colors">FAQ</a>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg border border-slate-800 bg-slate-900/80 text-amber-300 hover:text-white hover:bg-slate-800 transition-all"
+              title={`Switch to ${theme === "sand-gold" ? "Cosmic Space" : "Sand Golden"} theme`}
+            >
+              {theme === "sand-gold" ? (
+                <Moon className="h-4 w-4" />
+              ) : (
+                <Sun className="h-4 w-4" />
+              )}
+            </button>
+
             <button
               onClick={() => setIsSuperThanksOpen(true)}
               className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition-all"
@@ -141,11 +162,11 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO SECTION (ANTI-SLOP & DJLEXFOLIO ETHOS) ─────────── */}
-      <section className="relative overflow-hidden pt-20 pb-24 sm:pt-28 sm:pb-32 bg-radial from-slate-900 via-slate-950 to-slate-950 border-b border-slate-800">
+      <section className="relative overflow-hidden pt-20 pb-20 sm:pt-28 sm:pb-28 bg-radial from-slate-900 via-slate-950 to-slate-950 border-b border-slate-800">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center relative z-10 space-y-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-amber-400 text-xs font-semibold shadow-xs">
             <Sparkles className="h-3.5 w-3.5" />
-            <span>Built by Law Students at NLU Delhi • Powered by djlexfolio.tech</span>
+            <span>Built by Law Scholars at NLU Delhi • Powered by djlexfolio.tech</span>
           </div>
 
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-[1.12]">
@@ -158,13 +179,13 @@ export default function LandingPage() {
 
           <p className="mt-4 text-base sm:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
             No corporate buzzwords. No algorithmic spam. An authentic, humanized legal operating system combining
-            High Court cause-list indexers, an 8-stage Kanban CRM, and footnote-first outreach for Indian law scholars.
+            High Court cause-list indexers, an 8-stage Kanban CRM, and 1-Click direct apply for Indian law scholars.
           </p>
 
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3.5">
             <Link href="/login" className="w-full sm:w-auto">
               <Button size="lg" className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-sm px-8 h-12 shadow-lg shadow-amber-500/10">
-                Direct Scholar Login (One-Click)
+                Explore Workspace (Sign Up / Guest)
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
@@ -173,7 +194,7 @@ export default function LandingPage() {
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 h-12 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 text-sm font-semibold transition-colors"
             >
               <Heart className="h-4 w-4 text-rose-400 fill-rose-400" />
-              <span>SuperThanks & UPI Badges</span>
+              <span>SuperThanks & Supporter Badges</span>
             </button>
           </div>
 
@@ -190,84 +211,24 @@ export default function LandingPage() {
             </span>
           </div>
         </div>
+      </section>
 
-        {/* Live Workspace Preview Card */}
-        <div className="mt-16 max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-3 shadow-2xl backdrop-blur-md">
-            <div className="rounded-xl border border-slate-800/80 bg-slate-950 p-5 sm:p-7">
-              {/* Browser style header */}
-              <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-                <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-rose-500/80" />
-                  <div className="h-3 w-3 rounded-full bg-amber-500/80" />
-                  <div className="h-3 w-3 rounded-full bg-emerald-500/80" />
-                  <span className="ml-3 text-xs font-mono text-slate-400">jurisflow.tech/applications</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 font-mono text-[11px]">
-                    NLU Delhi Verified
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono text-[11px]">
-                    Firebase Cloud Synced
-                  </span>
-                </div>
-              </div>
-
-              {/* 3 Interactive Pipeline Preview Cards */}
-              <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                      Supreme Court Chambers
-                    </span>
-                    <span className="font-mono text-xs font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
-                      100 pts
-                    </span>
-                  </div>
-                  <h4 className="font-bold text-sm text-white">Chambers of the Chief Justice</h4>
-                  <p className="text-xs text-slate-400">Constitution Bench • Direct Registry Submission</p>
-                  <div className="pt-2 text-[11px] text-slate-500 flex items-center justify-between border-t border-slate-800/60">
-                    <span>Deadline: Jan 15, 2027</span>
-                    <span className="text-amber-400 font-medium">Preparing CV</span>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
-                      Delhi High Court
-                    </span>
-                    <span className="font-mono text-xs font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
-                      95 pts
-                    </span>
-                  </div>
-                  <h4 className="font-bold text-sm text-white">Justice Prathiba M. Singh Chamber</h4>
-                  <p className="text-xs text-slate-400">IP & Technology Law • Direct Registry Channel</p>
-                  <div className="pt-2 text-[11px] text-slate-500 flex items-center justify-between border-t border-slate-800/60">
-                    <span>Deadline: Jan 20, 2027</span>
-                    <span className="text-emerald-400 font-medium">Applied ✓</span>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
-                      Telangana High Court
-                    </span>
-                    <span className="font-mono text-xs font-bold text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">
-                      92 pts
-                    </span>
-                  </div>
-                  <h4 className="font-bold text-sm text-white">Appellate & Constitutional Bench</h4>
-                  <p className="text-xs text-slate-400">Public Law & Human Rights • Hyderabad</p>
-                  <div className="pt-2 text-[11px] text-slate-500 flex items-center justify-between border-t border-slate-800/60">
-                    <span>Deadline: Jan 30, 2027</span>
-                    <span className="text-purple-400 font-medium">Interview Ready</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+      {/* ── SWIPE-TO-INTRODUCE INTERACTIVE TUTORIAL ──────────────── */}
+      <section id="tutorial" className="py-20 bg-slate-900/60 border-b border-slate-800">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
+            <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/20">
+              Interactive System Walkthrough
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+              Swipe to Introduce JurisFlow
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-400">
+              Slide through the five core capabilities powering the next generation of Indian legal scholars.
+            </p>
           </div>
+
+          <SwipeWalkthrough />
         </div>
       </section>
 
@@ -291,9 +252,9 @@ export default function LandingPage() {
               <div className="h-10 w-10 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center font-bold">
                 <Search className="h-5 w-5" />
               </div>
-              <h3 className="text-base font-bold text-white">1. Opportunity Aggregator</h3>
+              <h3 className="text-base font-bold text-white">1. 15-Source Legal Aggregator</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Aggregates postings across Lawctopus, LiveLaw, Bar & Bench, SCC Online, firm career registries, and High Court gazettes into structured, standardized records.
+                Aggregates postings across Supreme Court, High Courts, Lawctopus, LiveLaw, Bar & Bench, SCC Online, firm career registries, and chamber notices into structured, standardized records.
               </p>
             </div>
 
@@ -321,9 +282,9 @@ export default function LandingPage() {
               <div className="h-10 w-10 rounded-xl bg-rose-500/15 text-rose-400 flex items-center justify-center font-bold">
                 <Mail className="h-5 w-5" />
               </div>
-              <h3 className="text-base font-bold text-white">4. Footnote-First AI Outreach</h3>
+              <h3 className="text-base font-bold text-white">4. 1-Click Direct Apply & AI Outreach</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Anti-slop email synthesis tailored to judge rulings, chamber practice areas, and scholar research memory hooks without robotic filler phrases.
+                Pre-populates tailored Gmail web compose drafts with judicial footnote memory hooks and instantly schedules automated D+7 CRM follow-ups.
               </p>
             </div>
 
@@ -341,9 +302,9 @@ export default function LandingPage() {
               <div className="h-10 w-10 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center font-bold">
                 <Cloud className="h-5 w-5" />
               </div>
-              <h3 className="text-base font-bold text-white">6. Google Cloud & Firebase Sync</h3>
+              <h3 className="text-base font-bold text-white">6. Google Cloud & Privacy Isolation</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Real-time Firebase Auth and Firestore state persistence keeping your applications, bookmarks, and SuperThanks stickers synced across all devices.
+                Private authentication with Firebase Identity and local storage isolation keeping your applications, bookmarks, and SuperThanks stickers safe and secure.
               </p>
             </div>
           </div>
