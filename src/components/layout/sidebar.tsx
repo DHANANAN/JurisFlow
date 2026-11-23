@@ -21,7 +21,10 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { currentUser } from "@/lib/data";
+import { getActiveUser, subscribeToAuth } from "@/lib/firebase";
+import { User } from "@/lib/types";
+import { MembershipSticker } from "@/components/ui/membership-sticker";
+import { Heart } from "lucide-react";
 
 interface SidebarProps {
   mobileOpen?: boolean;
@@ -87,6 +90,12 @@ const navItems = [
 
 export function Sidebar({ mobileOpen = false, onCloseMobile }: SidebarProps) {
   const pathname = usePathname();
+  const [user, setUser] = React.useState<User | null>(null);
+
+  React.useEffect(() => {
+    const unsub = subscribeToAuth((u) => setUser(u));
+    return unsub;
+  }, []);
 
   return (
     <>
@@ -214,21 +223,30 @@ export function Sidebar({ mobileOpen = false, onCloseMobile }: SidebarProps) {
             <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
           </Link>
 
-          {/* User mini profile card */}
+          {/* User mini profile card with SuperThanks sticker */}
           <Link
             href="/settings"
             onClick={onCloseMobile}
-            className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/80 hover:bg-slate-100/80 border border-slate-200/60 transition-all text-left group"
+            className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/90 hover:bg-slate-100 border border-slate-200/80 transition-all text-left group"
           >
-            <div className="h-8 w-8 rounded-lg bg-blue-600 text-white font-semibold text-xs flex items-center justify-center shrink-0 shadow-xs">
-              DC
+            <div className="relative">
+              <div className="h-8 w-8 rounded-lg bg-blue-600 text-white font-semibold text-xs flex items-center justify-center shrink-0 shadow-xs ring-1 ring-blue-700">
+                {user?.name ? user.name.split(" ").map((n) => n[0]).join("").slice(0, 2) : "DC"}
+              </div>
+              {user?.contributorBadge && (
+                <span className="absolute -top-1.5 -right-1.5 text-xs">
+                  {user.contributorBadge.icon}
+                </span>
+              )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-slate-900 truncate group-hover:text-blue-600">
-                {currentUser.name}
-              </p>
-              <p className="text-[11px] text-slate-500 truncate">
-                {currentUser.university} • {currentUser.year}
+              <div className="flex items-center gap-1.5">
+                <p className="text-xs font-semibold text-slate-900 truncate group-hover:text-blue-600">
+                  {user?.name || "Dhananjay Chouhan"}
+                </p>
+              </div>
+              <p className="text-[10px] text-slate-500 truncate font-mono">
+                {user?.university || "NLU Delhi"}
               </p>
             </div>
           </Link>

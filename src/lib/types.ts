@@ -48,6 +48,20 @@ export type RelationshipStrength =
   | "Weak"
   | "New";
 
+export type ContributorTier = "none" | "bronze" | "silver" | "gold" | "platinum" | "institutional";
+
+export interface ContributorBadge {
+  id: string;
+  tier: ContributorTier;
+  title: string;
+  icon: string;
+  unlockedAt: string;
+  amount?: number;
+  utr?: string;
+  stickerUrl?: string;
+  perks: string[];
+}
+
 export interface User {
   id: string;
   name: string;
@@ -59,6 +73,11 @@ export interface User {
   bio?: string;
   location?: string;
   linkedin?: string;
+  isLoggedIn?: boolean;
+  contributorBadge?: ContributorBadge;
+  stickers?: string[];
+  googleCloudConnected?: boolean;
+  firebaseUid?: string;
 }
 
 export interface Opportunity {

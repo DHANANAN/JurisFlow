@@ -28,14 +28,23 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ScoreBadge } from "@/components/ui/score-badge";
 import {
-  currentUser,
+  currentUser as defaultUser,
   analyticsData,
   careerRecommendations,
   recentActivities,
   opportunities,
 } from "@/lib/data";
+import { getActiveUser, subscribeToAuth } from "@/lib/firebase";
+import { User } from "@/lib/types";
+import { MembershipSticker } from "@/components/ui/membership-sticker";
 
 export default function DashboardPage() {
+  const [user, setUser] = React.useState<User | null>(null);
+
+  React.useEffect(() => {
+    const unsub = subscribeToAuth((u) => setUser(u));
+    return unsub;
+  }, []);
   const upcomingDeadlines = opportunities
     .filter((o) => o.deadline)
     .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
@@ -45,30 +54,33 @@ export default function DashboardPage() {
     <AppShell title="Dashboard">
       <div className="space-y-8 pb-12">
         {/* ── WELCOME BANNER ────────────────────────────────────────── */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-blue-950 text-white shadow-md">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-900 border border-slate-800 text-white shadow-xl">
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-xl sm:text-2xl font-bold tracking-tight">
-                Welcome back, {currentUser.name.split(" ")[0]} 👋
+                Welcome back, {user?.name || "Dhananjay Chouhan"} 👋
               </span>
-              <Badge variant="purple" className="text-xs bg-blue-500/20 text-blue-200 border-blue-400/30">
-                {currentUser.university}
+              <Badge variant="purple" className="text-xs bg-amber-500/15 text-amber-300 border-amber-500/30 font-mono">
+                {user?.university || "NLU Delhi"}
               </Badge>
+              {user?.contributorBadge && (
+                <MembershipSticker badge={user.contributorBadge} size="sm" />
+              )}
             </div>
             <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-              Targeting <strong>Supreme Court Chambers</strong> & <strong>Telangana High Court</strong>. You have <strong>3 applications in preparation</strong> and <strong>2 critical deadlines</strong> this month.
+              Targeting <strong>Supreme Court Chambers</strong> & <strong>Telangana High Court</strong>. You have <strong>3 applications in preparation</strong> and <strong>2 critical deadlines</strong> this month. Connected to Google Cloud ({user?.email || "mdc18042007@gmail.com"}).
             </p>
           </div>
 
           <div className="flex items-center gap-2.5">
             <Link href="/emails">
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-500 text-white shadow-xs">
+              <Button size="sm" className="bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-bold text-xs shadow-xs">
                 <Sparkles className="mr-1.5 h-3.5 w-3.5" />
                 Draft Clerkship Email
               </Button>
             </Link>
             <Link href="/opportunities">
-              <Button size="sm" variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/20">
+              <Button size="sm" variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs">
                 Discover
               </Button>
             </Link>

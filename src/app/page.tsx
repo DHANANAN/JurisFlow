@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Scale,
   Sparkles,
@@ -17,187 +18,251 @@ import {
   ChevronDown,
   Layers,
   Zap,
-  Globe2,
   BookOpen,
   Award,
+  Heart,
+  QrCode,
+  School,
+  Building2,
+  Cloud,
+  ExternalLink,
+  Copy,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { BottomDock } from "@/components/layout/bottom-dock";
+import { SuperThanksModal } from "@/components/superthanks/superthanks-modal";
+import { PRIMARY_UPI_ID, SUPERTHANKS_TIERS } from "@/lib/payment-youpi";
+import { MembershipSticker } from "@/components/ui/membership-sticker";
+import { getActiveUser, subscribeToAuth } from "@/lib/firebase";
+import { User, ContributorTier } from "@/lib/types";
 
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = React.useState<number | null>(0);
+  const [isSuperThanksOpen, setIsSuperThanksOpen] = React.useState(false);
+  const [selectedTier, setSelectedTier] = React.useState<ContributorTier>("gold");
+  const [copiedUpi, setCopiedUpi] = React.useState(false);
+  const [user, setUser] = React.useState<User | null>(null);
+
+  React.useEffect(() => {
+    const unsub = subscribeToAuth((u) => setUser(u));
+    return unsub;
+  }, []);
+
+  const handleCopyUpi = () => {
+    navigator.clipboard.writeText(PRIMARY_UPI_ID);
+    setCopiedUpi(true);
+    setTimeout(() => setCopiedUpi(false), 2000);
+  };
+
+  const openTierModal = (tier: ContributorTier) => {
+    setSelectedTier(tier);
+    setIsSuperThanksOpen(true);
+  };
 
   const faqs = [
     {
-      q: "What is JurisFlow and who is it built for?",
-      a: "JurisFlow is an AI-native legal career operating system built specifically for law students, judicial clerkship aspirants, and litigation enthusiasts. It unifies opportunity discovery across 50+ Indian legal portals (Lawlit, Lawctopus, LiveLaw, Bar & Bench, SCC Online, Court websites), intelligent opportunity scoring, an 8-stage Kanban CRM, and high-conversion AI email drafting.",
+      q: "What is JurisFlow and why was it built?",
+      a: "JurisFlow is an open legal research and career operating system built by law students at NLU Delhi. It replaces chaotic Excel sheets, fragmented WhatsApp groups, and missed clerkship deadlines with a unified registry tracker, an 8-stage litigation Kanban CRM, and citation-accurate email synthesis.",
     },
     {
-      q: "How does the AI Opportunity Scoring Engine work?",
-      a: "The scoring algorithm ranks opportunities on a 100-point scale based on judicial prestige, chamber credibility, and tier classification (Supreme Court Chambers = 100, Supreme Court Clerkships = 98, High Courts = 95, Tier-1 Firms = 90). It automatically adds bonuses for Delhi NCR (+20), Constitutional Law exposure (+20), Litigation practice (+15), and NLU alumni connections (+15).",
+      q: "Why is there no paywall or forced SaaS subscription?",
+      a: "Legal opportunities belong to every deserving student, not just those who can afford commercial subscription gates. JurisFlow is funded through peer-to-peer community SuperThanks and institutional university grant partnerships. Anyone can use the core workspace for free.",
     },
     {
-      q: "How does the AI Email Engine ensure emails don't sound generic?",
-      a: "Instead of generic AI fluff, JurisFlow incorporates candidate-specific legal memory hooks (such as 'I have developed a habit of reading footnotes before conclusions'), case references, and research alignments tailored to specific judges, senior advocates, or partners.",
+      q: "How does the SuperThanks community membership work?",
+      a: "Just like YouTube Channel Memberships, law students and advocates who contribute via UPI (6304812838@upi) receive collectible membership badges and stickers in their profile and headers (Bronze Advocate, Silver Counsel, Gold Patron, and Platinum Bencher) as a badge of honor.",
     },
     {
-      q: "Can I track judicial clerkships and litigation chambers separately?",
-      a: "Yes. JurisFlow includes a dedicated Judicial Career Center tracking sitting Supreme Court Justices, Delhi High Court judges, Telangana High Court benches, and Bombay High Court chambers with clerkship openings, deadlines, and direct registry email channels.",
+      q: "How do universities and NLU RCC cells get institutional access?",
+      a: "Instead of commercial checkout fields, student convenors and deans submit an Institutional Response. We allocate batch-wide quotas, verified alumni mentorship routing, and custom chamber templates directly via academic grant agreements.",
     },
     {
-      q: "Is JurisFlow open-source and ready for law school incubators?",
-      a: "Absolutely. JurisFlow is architected with a clean open-source foundation, modular Next.js App Router, TypeScript schemas, and integration-ready endpoints for Apify, Firecrawl, and Google Workspace.",
+      q: "How does the AI Email Engine ensure emails do not sound like generic AI slop?",
+      a: "In accordance with strict anti-slop guidelines, JurisFlow eliminates fluffy buzzwords. It weaves candidate-specific legal memory hooks (such as analyzing footnotes before conclusions) and exact citations from recent division bench rulings into every draft.",
+    },
+    {
+      q: "Can I log in using the pre-authorized NLU Scholar credentials?",
+      a: "Yes. The login portal features a one-click Default Scholar sign-in (mdc18042007@gmail.com / Nlu@1567) backed by Google Cloud Firebase Identity and real-time state synchronization.",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-amber-400 selection:text-slate-950 font-sans">
       {/* ── STICKY NAVBAR ────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/80 backdrop-blur-md">
+      <nav className="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/85 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-xs">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-slate-950 flex items-center justify-center font-black shadow-sm">
               <Scale className="h-5 w-5" />
             </div>
             <div>
-              <span className="font-bold text-lg tracking-tight text-slate-900">
+              <span className="font-bold text-lg tracking-tight text-white">
                 JurisFlow
               </span>
-              <span className="ml-1.5 text-[10px] font-mono px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded-sm border border-blue-200">
-                AI Career OS
+              <span className="ml-1.5 text-[10px] font-mono px-1.5 py-0.5 bg-amber-500/10 text-amber-300 rounded border border-amber-500/20">
+                NLU Delhi • Anti-Slop
               </span>
             </div>
           </Link>
 
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-            <a href="#features" className="hover:text-slate-900 transition-colors">Features</a>
-            <a href="#judicial" className="hover:text-slate-900 transition-colors">Judicial Center</a>
-            <a href="#workflow" className="hover:text-slate-900 transition-colors">AI Workflow</a>
-            <a href="#pricing" className="hover:text-slate-900 transition-colors">Pricing</a>
-            <a href="#faq" className="hover:text-slate-900 transition-colors">FAQ</a>
+          <div className="hidden md:flex items-center gap-7 text-xs font-semibold text-slate-300">
+            <a href="#features" className="hover:text-amber-400 transition-colors">Features</a>
+            <a href="#judicial" className="hover:text-amber-400 transition-colors">Judicial Center</a>
+            <a href="#superthanks" className="hover:text-amber-400 transition-colors">SuperThanks Tiers</a>
+            <a href="#institutional" className="hover:text-amber-400 transition-colors">Institutional Response</a>
+            <a href="#faq" className="hover:text-amber-400 transition-colors">FAQ</a>
           </div>
 
           <div className="flex items-center gap-3">
-            <Link href="/dashboard">
-              <Button variant="ghost" size="sm" className="hidden sm:inline-flex text-slate-700">
+            <button
+              onClick={() => setIsSuperThanksOpen(true)}
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition-all"
+            >
+              <Heart className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+              <span>SuperThanks</span>
+            </button>
+
+            <Link href="/login">
+              <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white text-xs">
                 Sign In
               </Button>
             </Link>
+
             <Link href="/dashboard">
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white shadow-xs">
+              <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs shadow-xs">
                 Launch Workspace
-                <ArrowRight className="ml-1.5 h-4 w-4" />
+                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
               </Button>
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* ── HERO SECTION ─────────────────────────────────────────── */}
-      <section className="relative overflow-hidden pt-20 pb-24 sm:pt-28 sm:pb-32 bg-radial from-blue-50/50 via-slate-50 to-slate-50">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold mb-8 shadow-xs">
+      {/* ── HERO SECTION (ANTI-SLOP & DJLEXFOLIO ETHOS) ─────────── */}
+      <section className="relative overflow-hidden pt-20 pb-24 sm:pt-28 sm:pb-32 bg-radial from-slate-900 via-slate-950 to-slate-950 border-b border-slate-800">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center relative z-10 space-y-6">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-amber-400 text-xs font-semibold shadow-xs">
             <Sparkles className="h-3.5 w-3.5" />
-            <span>The Career Operating System for Law Students</span>
+            <span>Built by Law Students at NLU Delhi • Powered by djlexfolio.tech</span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-slate-950 leading-[1.12]">
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-[1.12]">
             Discover clerkships. <br className="hidden sm:inline" />
-            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 bg-clip-text text-transparent">
-              Track legal careers.
+            <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent">
+              Track chamber pipelines.
             </span> <br />
-            Accelerate your practice.
+            Command your legal career.
           </h1>
 
-          <p className="mt-6 text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-            JurisFlow combines the intelligence of <strong>Perplexity</strong>, the pipeline of <strong>Linear</strong>, and the networking depth of <strong>LinkedIn</strong> — engineered from the ground up for judicial clerkships, litigation chambers, and elite law firm placements.
+          <p className="mt-4 text-base sm:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
+            No corporate buzzwords. No algorithmic spam. An authentic, humanized legal operating system combining
+            High Court cause-list indexers, an 8-stage Kanban CRM, and footnote-first outreach for Indian law scholars.
           </p>
 
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/dashboard" className="w-full sm:w-auto">
-              <Button size="lg" className="w-full sm:w-auto bg-slate-950 hover:bg-blue-600 text-white text-base px-8 h-12 shadow-md">
-                Get Started Free
+          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3.5">
+            <Link href="/login" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-sm px-8 h-12 shadow-lg shadow-amber-500/10">
+                Direct Scholar Login (One-Click)
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-            <Link href="/opportunities" className="w-full sm:w-auto">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto text-base px-8 h-12 bg-white hover:bg-slate-50 border-slate-300">
-                <Search className="mr-2 h-4 w-4 text-slate-500" />
-                Explore 50+ Opportunities
-              </Button>
-            </Link>
+            <button
+              onClick={() => setIsSuperThanksOpen(true)}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 h-12 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 text-sm font-semibold transition-colors"
+            >
+              <Heart className="h-4 w-4 text-rose-400 fill-rose-400" />
+              <span>SuperThanks & UPI Badges</span>
+            </button>
           </div>
 
-          {/* Social Proof Badges */}
-          <div className="mt-14 pt-8 border-t border-slate-200/70 flex flex-wrap items-center justify-center gap-y-3 gap-x-8 text-xs font-medium text-slate-500">
+          {/* Authentic Scholar Trust Badges */}
+          <div className="pt-8 border-t border-slate-800/80 flex flex-wrap items-center justify-center gap-y-3 gap-x-8 text-xs font-medium text-slate-400">
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Supreme Court & High Court Chambers
+              <CheckCircle2 className="h-4 w-4 text-emerald-400" /> Supreme Court & 25 High Courts Indexed
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Tier-1 Disputes & Litigation Boutiques
+              <CheckCircle2 className="h-4 w-4 text-emerald-400" /> Senior Advocate Chambers & Tier-1 Boutiques
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Curated for NLU Students & Aspirants
+              <CheckCircle2 className="h-4 w-4 text-emerald-400" /> Free Academic & Community Funded Access
             </span>
           </div>
         </div>
 
-        {/* Interactive App Preview Mockup */}
-        <div className="mt-16 max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-2xl ring-1 ring-slate-900/5">
-            <div className="rounded-xl border border-slate-200/60 bg-slate-50 p-6 sm:p-8">
-              {/* Mockup bar */}
-              <div className="flex items-center justify-between pb-6 border-b border-slate-200/60">
+        {/* Live Workspace Preview Card */}
+        <div className="mt-16 max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-3 shadow-2xl backdrop-blur-md">
+            <div className="rounded-xl border border-slate-800/80 bg-slate-950 p-5 sm:p-7">
+              {/* Browser style header */}
+              <div className="flex items-center justify-between pb-4 border-b border-slate-800">
                 <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-rose-400" />
-                  <div className="h-3 w-3 rounded-full bg-amber-400" />
-                  <div className="h-3 w-3 rounded-full bg-emerald-400" />
-                  <span className="ml-3 text-xs font-mono text-slate-400">app.jurisflow.tech/applications</span>
+                  <div className="h-3 w-3 rounded-full bg-rose-500/80" />
+                  <div className="h-3 w-3 rounded-full bg-amber-500/80" />
+                  <div className="h-3 w-3 rounded-full bg-emerald-500/80" />
+                  <span className="ml-3 text-xs font-mono text-slate-400">jurisflow.tech/applications</span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-                  <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">8 Columns Active</span>
-                  <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-800">AI Scoring Active</span>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 font-mono text-[11px]">
+                    NLU Delhi Verified
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono text-[11px]">
+                    Firebase Cloud Synced
+                  </span>
                 </div>
               </div>
 
-              {/* Preview 3-column snippet */}
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs space-y-2">
+              {/* 3 Interactive Pipeline Preview Cards */}
+              <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">Supreme Court Chambers</span>
-                    <span className="font-mono text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">100 pts</span>
+                    <span className="text-[11px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                      Supreme Court Chambers
+                    </span>
+                    <span className="font-mono text-xs font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                      100 pts
+                    </span>
                   </div>
-                  <h4 className="font-bold text-sm text-slate-900">Hon&apos;ble Judge Chamber — SCI</h4>
-                  <p className="text-xs text-slate-500">Constitutional Bench • Direct Registry Submission</p>
-                  <div className="pt-2 text-[11px] text-slate-400 flex items-center justify-between">
-                    <span>Deadline: Jan 15</span>
-                    <span className="text-blue-600 font-medium">Preparing</span>
+                  <h4 className="font-bold text-sm text-white">Chambers of the Chief Justice</h4>
+                  <p className="text-xs text-slate-400">Constitution Bench • Direct Registry Submission</p>
+                  <div className="pt-2 text-[11px] text-slate-500 flex items-center justify-between border-t border-slate-800/60">
+                    <span>Deadline: Jan 15, 2027</span>
+                    <span className="text-amber-400 font-medium">Preparing CV</span>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs space-y-2">
+                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md">Telangana High Court</span>
-                    <span className="font-mono text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">92 pts</span>
+                    <span className="text-[11px] font-semibold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
+                      Delhi High Court
+                    </span>
+                    <span className="font-mono text-xs font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                      95 pts
+                    </span>
                   </div>
-                  <h4 className="font-bold text-sm text-slate-900">Judicial Internship — Constitutional Bench</h4>
-                  <p className="text-xs text-slate-500">Public Interest Litigation • Mahbubnagar/Hyd</p>
-                  <div className="pt-2 text-[11px] text-slate-400 flex items-center justify-between">
-                    <span>Deadline: Jan 30</span>
-                    <span className="text-amber-600 font-medium">Applied ✓</span>
+                  <h4 className="font-bold text-sm text-white">Justice Prathiba M. Singh Chamber</h4>
+                  <p className="text-xs text-slate-400">IP & Technology Law • Direct Registry Channel</p>
+                  <div className="pt-2 text-[11px] text-slate-500 flex items-center justify-between border-t border-slate-800/60">
+                    <span>Deadline: Jan 20, 2027</span>
+                    <span className="text-emerald-400 font-medium">Applied ✓</span>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs space-y-2">
+                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">Tier-1 Disputes</span>
-                    <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">90 pts</span>
+                    <span className="text-[11px] font-semibold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+                      Telangana High Court
+                    </span>
+                    <span className="font-mono text-xs font-bold text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">
+                      92 pts
+                    </span>
                   </div>
-                  <h4 className="font-bold text-sm text-slate-900">AZB & Partners — Delhi Office</h4>
-                  <p className="text-xs text-slate-500">Commercial Litigation • Alumni Referral</p>
-                  <div className="pt-2 text-[11px] text-slate-400 flex items-center justify-between">
-                    <span>Deadline: Feb 15</span>
-                    <span className="text-purple-600 font-medium">Interview Ready</span>
+                  <h4 className="font-bold text-sm text-white">Appellate & Constitutional Bench</h4>
+                  <p className="text-xs text-slate-400">Public Law & Human Rights • Hyderabad</p>
+                  <div className="pt-2 text-[11px] text-slate-500 flex items-center justify-between border-t border-slate-800/60">
+                    <span>Deadline: Jan 30, 2027</span>
+                    <span className="text-purple-400 font-medium">Interview Ready</span>
                   </div>
                 </div>
               </div>
@@ -207,264 +272,254 @@ export default function LandingPage() {
       </section>
 
       {/* ── CORE PRODUCT MODULES ─────────────────────────────────── */}
-      <section id="features" className="py-24 bg-white border-y border-slate-200/80">
+      <section id="features" className="py-24 bg-slate-950 border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto">
-            <Badge variant="purple" className="mb-3">
-              9 Core Modules
-            </Badge>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-950 tracking-tight">
-              A Complete Operating System for the Modern Lawyer
+            <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/20">
+              The Anti-Slop Legal Toolkit
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mt-3">
+              Precision Infrastructure for Legal Scholars
             </h2>
-            <p className="mt-4 text-slate-600 text-base sm:text-lg">
-              Engineered to replace 12 scattered tabs, manual spreadsheets, and generic rejection emails with a streamlined legal intelligence stack.
+            <p className="mt-3 text-slate-400 text-sm sm:text-base">
+              Say goodbye to messy spreadsheets, generic template emails, and missed clerkship notices.
             </p>
           </div>
 
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Module 1 */}
-            <div className="p-6 rounded-2xl border border-slate-200/90 bg-slate-50/50 hover:bg-white hover:shadow-lg transition-all space-y-3 group">
-              <div className="h-10 w-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
+          <div className="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 transition-all space-y-3">
+              <div className="h-10 w-10 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center font-bold">
                 <Search className="h-5 w-5" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">1. Opportunity Discovery Engine</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Live aggregation from Lawlit, Lawctopus, LiveLaw, Bar & Bench, SCC Online, firm career pages, and high court gazettes into standardized opportunity cards.
+              <h3 className="text-base font-bold text-white">1. Opportunity Aggregator</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Aggregates postings across Lawctopus, LiveLaw, Bar & Bench, SCC Online, firm career registries, and High Court gazettes into structured, standardized records.
               </p>
             </div>
 
-            {/* Module 2 */}
-            <div className="p-6 rounded-2xl border border-slate-200/90 bg-slate-50/50 hover:bg-white hover:shadow-lg transition-all space-y-3 group">
-              <div className="h-10 w-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+            <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 transition-all space-y-3">
+              <div className="h-10 w-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center font-bold">
                 <Award className="h-5 w-5" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">2. AI Opportunity Scoring System</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Prestige weighted: SCI Chambers (100), SCI Clerkship (98), High Courts (95), Tier 1 (90). Custom bonuses for Delhi NCR (+20) and Constitutional Law (+20).
+              <h3 className="text-base font-bold text-white">2. Objective Prestige Scoring</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Ranks opportunities using a transparent 100-point algorithm: Supreme Court Chambers (100), Supreme Court Clerkships (98), High Courts (95), and Tier-1 Firms (90).
               </p>
             </div>
 
-            {/* Module 3 */}
-            <div className="p-6 rounded-2xl border border-slate-200/90 bg-slate-50/50 hover:bg-white hover:shadow-lg transition-all space-y-3 group">
-              <div className="h-10 w-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition-colors">
+            <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 transition-all space-y-3">
+              <div className="h-10 w-10 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center font-bold">
                 <KanbanSquare className="h-5 w-5" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">3. Application CRM (Linear-style)</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                An 8-stage visual Kanban pipeline: Discovered, Interested, Preparing, Applied, Follow-Up, Interview, Offer, and Closed with versioned CVs and writing samples.
+              <h3 className="text-base font-bold text-white">3. 8-Stage Litigation CRM</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Linear-inspired pipeline: Discovered, Interested, Preparing, Applied, Follow-Up, Interview, Offer, and Closed with versioned CVs and writing samples.
               </p>
             </div>
 
-            {/* Module 4 */}
-            <div className="p-6 rounded-2xl border border-slate-200/90 bg-slate-50/50 hover:bg-white hover:shadow-lg transition-all space-y-3 group">
-              <div className="h-10 w-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center group-hover:bg-rose-600 group-hover:text-white transition-colors">
+            <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 transition-all space-y-3">
+              <div className="h-10 w-10 rounded-xl bg-rose-500/15 text-rose-400 flex items-center justify-center font-bold">
                 <Mail className="h-5 w-5" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">4. AI Email Engine & Memory Hooks</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Zero-repetition drafting for Applications, Networking, and Follow-ups with signature memory hooks: <em>&quot;I have developed a habit of reading footnotes before conclusions.&quot;</em>
+              <h3 className="text-base font-bold text-white">4. Footnote-First AI Outreach</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Anti-slop email synthesis tailored to judge rulings, chamber practice areas, and scholar research memory hooks without robotic filler phrases.
               </p>
             </div>
 
-            {/* Module 5 */}
-            <div className="p-6 rounded-2xl border border-slate-200/90 bg-slate-50/50 hover:bg-white hover:shadow-lg transition-all space-y-3 group">
-              <div className="h-10 w-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+            <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 transition-all space-y-3">
+              <div className="h-10 w-10 rounded-xl bg-yellow-500/15 text-yellow-400 flex items-center justify-center font-bold">
                 <Landmark className="h-5 w-5" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">5. Judicial Career Center</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Dedicated database of Supreme Court, Delhi High Court, Telangana High Court, and Bombay High Court sitting judges, chambers, clerkship availability, and deadlines.
+              <h3 className="text-base font-bold text-white">5. Judicial Career Center</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Comprehensive directory of sitting Supreme Court, Delhi HC, Telangana HC, and Bombay HC judges with verified registry contacts and clerkship schedules.
               </p>
             </div>
 
-            {/* Module 6 */}
-            <div className="p-6 rounded-2xl border border-slate-200/90 bg-slate-50/50 hover:bg-white hover:shadow-lg transition-all space-y-3 group">
-              <div className="h-10 w-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition-colors">
-                <Users className="h-5 w-5" />
+            <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 transition-all space-y-3">
+              <div className="h-10 w-10 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center font-bold">
+                <Cloud className="h-5 w-5" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">6. Contact Intelligence & Network</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Track partners, senior advocates, registrars, and NLU alumni with relationship strength scores (Strong/Medium/Weak), interaction logs, and follow-up cadences.
-              </p>
-            </div>
-
-            {/* Module 7 */}
-            <div className="p-6 rounded-2xl border border-slate-200/90 bg-slate-50/50 hover:bg-white hover:shadow-lg transition-all space-y-3 group">
-              <div className="h-10 w-10 rounded-xl bg-cyan-100 text-cyan-700 flex items-center justify-center group-hover:bg-cyan-600 group-hover:text-white transition-colors">
-                <BarChart3 className="h-5 w-5" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900">7. Analytics & Conversion Dashboard</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Track response rates, interview conversion ratios, source effectiveness (Lawctopus vs LiveLaw vs Direct), and monthly growth with Recharts data visualizations.
-              </p>
-            </div>
-
-            {/* Module 8 */}
-            <div className="p-6 rounded-2xl border border-slate-200/90 bg-slate-50/50 hover:bg-white hover:shadow-lg transition-all space-y-3 group">
-              <div className="h-10 w-10 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center group-hover:bg-teal-600 group-hover:text-white transition-colors">
-                <BookOpen className="h-5 w-5" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900">8. Curated Prompt Library</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Battle-tested prompt templates for judge research briefs, cover letters, interview prep, and follow-up emails parameterized with student background variables.
-              </p>
-            </div>
-
-            {/* Module 9 */}
-            <div className="p-6 rounded-2xl border border-slate-200/90 bg-slate-50/50 hover:bg-white hover:shadow-lg transition-all space-y-3 group">
-              <div className="h-10 w-10 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center group-hover:bg-orange-600 group-hover:text-white transition-colors">
-                <Sparkles className="h-5 w-5" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900">9. AI Career Intelligence</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Proactive weekly recommendations: &quot;Apply This Week&quot;, &quot;High Probability Constitutional Law Matches&quot;, and automated radar alignment based on your CV.
+              <h3 className="text-base font-bold text-white">6. Google Cloud & Firebase Sync</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Real-time Firebase Auth and Firestore state persistence keeping your applications, bookmarks, and SuperThanks stickers synced across all devices.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── AI WORKFLOW PIPELINE ─────────────────────────────────── */}
-      <section id="workflow" className="py-24 bg-slate-50">
+      {/* ── SUPERTHANKS & YOUPI-PG PAYMENT SCHEME ────────────────── */}
+      <section id="superthanks" className="py-24 bg-slate-900 border-b border-slate-800 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-3xl font-extrabold text-slate-950">
-              The Intelligent 4-Step Legal Career Loop
+            <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/20">
+              Community Contribution • Zero Commercial Paywalls
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-3">
+              SuperThanks & Supporter Membership
             </h2>
-            <p className="mt-3 text-slate-600">
-              Transform chaotic manual applications into a structured, compounding career asset.
+            <p className="mt-3 text-slate-400 text-sm">
+              We removed commercial SaaS pricing. Instead, contribute what you wish via UPI to keep the scrapers running and unlock YouTube-style profile stickers and member perks!
             </p>
           </div>
 
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-4 gap-6 relative">
-            <div className="p-6 rounded-xl bg-white border border-slate-200 shadow-xs relative">
-              <span className="font-mono text-3xl font-black text-blue-600/30">01</span>
-              <h3 className="font-bold text-base mt-2 text-slate-900">Discover & Ingest</h3>
-              <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-                Scrapes 50+ portals daily. Extracts deadlines, chambers, practice areas, and direct contact emails.
-              </p>
+          {/* 4 SuperThanks Tiers with YouTube Membership Badges */}
+          <div className="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {SUPERTHANKS_TIERS.map((tier) => (
+              <div
+                key={tier.id}
+                className={`rounded-2xl border p-6 flex flex-col justify-between transition-all ${
+                  tier.recommended
+                    ? "bg-slate-950 border-amber-400/80 shadow-xl shadow-amber-500/10 ring-1 ring-amber-400/40"
+                    : "bg-slate-950/70 border-slate-800 hover:border-slate-700"
+                }`}
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-3xl">{tier.badgeIcon}</span>
+                    {tier.recommended && (
+                      <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 uppercase tracking-wider">
+                        Most Popular
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white">{tier.title}</h3>
+                    <div className="mt-2 flex items-baseline">
+                      <span className="text-3xl font-black text-amber-300">₹{tier.amount}</span>
+                      <span className="text-xs text-slate-400 ml-1.5 font-mono">one-time / custom</span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                      {tier.description}
+                    </p>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-800 space-y-2">
+                    <span className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider block">
+                      Member Perks & Stickers
+                    </span>
+                    <ul className="text-xs text-slate-400 space-y-2">
+                      {tier.perks.map((p, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" />
+                          <span>{p}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="pt-6">
+                  <Button
+                    onClick={() => openTierModal(tier.id)}
+                    className={`w-full font-bold text-xs py-2 shadow-xs ${
+                      tier.recommended
+                        ? "bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white"
+                        : "bg-slate-800 hover:bg-slate-700 text-slate-200"
+                    }`}
+                  >
+                    <span>Contribute ₹{tier.amount} & Claim Sticker</span>
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Authentic UPI QR Card & Direct Payment Details */}
+          <div className="mt-12 max-w-3xl mx-auto rounded-2xl border border-amber-500/40 bg-slate-950 p-6 sm:p-8 shadow-2xl flex flex-col md:flex-row items-center gap-6">
+            <div className="relative p-2 rounded-xl bg-white shadow-md shrink-0">
+              <Image
+                src="/qr-upi.jpg"
+                alt="JurisFlow UPI QR Code"
+                width={160}
+                height={160}
+                className="rounded-lg object-contain"
+              />
+              <div className="absolute inset-0 border-2 border-amber-500/50 rounded-xl pointer-events-none" />
             </div>
 
-            <div className="p-6 rounded-xl bg-white border border-slate-200 shadow-xs relative">
-              <span className="font-mono text-3xl font-black text-blue-600/30">02</span>
-              <h3 className="font-bold text-base mt-2 text-slate-900">Score & Match</h3>
-              <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-                Applies prestige rules and calculates profile alignment bonuses for your specific university and target cities.
+            <div className="flex-1 space-y-3 text-center md:text-left">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-mono">
+                <Check className="h-3.5 w-3.5" />
+                <span>Verified Direct UPI Gateway (YouPI-PG)</span>
+              </div>
+              <h3 className="text-lg font-bold text-white">
+                Scan & Support via Any UPI App
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Scan using Google Pay, PhonePe, Paytm, or BHIM. Every rupee goes directly towards maintaining open scrapers and server infrastructure for law students.
               </p>
-            </div>
 
-            <div className="p-6 rounded-xl bg-white border border-slate-200 shadow-xs relative">
-              <span className="font-mono text-3xl font-black text-blue-600/30">03</span>
-              <h3 className="font-bold text-base mt-2 text-slate-900">Draft & Personalize</h3>
-              <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-                Generates memorable, dignified outreach citing judge rulings, research papers, and relevant experience hooks.
-              </p>
-            </div>
-
-            <div className="p-6 rounded-xl bg-white border border-slate-200 shadow-xs relative">
-              <span className="font-mono text-3xl font-black text-blue-600/30">04</span>
-              <h3 className="font-bold text-base mt-2 text-slate-900">Track & Follow Up</h3>
-              <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-                Maintains a visual Kanban board, triggers intelligent reminders at D+7, and logs outcomes to improve future scores.
-              </p>
+              <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs text-amber-300 font-bold">
+                  <span>{PRIMARY_UPI_ID}</span>
+                  <button
+                    onClick={handleCopyUpi}
+                    className="text-slate-400 hover:text-white transition-colors"
+                    title="Copy UPI ID"
+                  >
+                    {copiedUpi ? (
+                      <Check className="h-3.5 w-3.5 text-emerald-400" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                  </button>
+                </div>
+                <Button
+                  onClick={() => setIsSuperThanksOpen(true)}
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs"
+                >
+                  Enter UTR to Claim Badge
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── PRICING PLACEHOLDER ──────────────────────────────────── */}
-      <section id="pricing" className="py-24 bg-white border-t border-slate-200/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto">
-            <Badge variant="default" className="mb-3">Accessible Legal-Tech</Badge>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-950">
-              Built for Ambitious Law Students
-            </h2>
-            <p className="mt-3 text-slate-600">
-              Free to get started. Upgradable for advanced AI drafting and multi-court pipeline tracking.
-            </p>
+      {/* ── INSTITUTIONAL RESPONSE SCHEME ────────────────────────── */}
+      <section id="institutional" className="py-20 bg-slate-950 border-b border-slate-800">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center space-y-5">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-mono font-semibold">
+            <School className="h-3.5 w-3.5" />
+            <span>Institutional Response Scheme</span>
           </div>
 
-          <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Free */}
-            <div className="rounded-2xl border border-slate-200 p-8 bg-white shadow-xs space-y-6">
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">Student Starter</h3>
-                <p className="text-xs text-slate-500 mt-1">For first & second year law students exploring opportunities.</p>
-                <div className="mt-4 flex items-baseline">
-                  <span className="text-4xl font-black text-slate-900">₹0</span>
-                  <span className="text-xs text-slate-400 ml-1">/ forever</span>
-                </div>
-              </div>
-              <ul className="text-xs text-slate-600 space-y-3">
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Full Opportunity Discovery Engine</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Standard AI Scoring (0-100)</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> 8-Stage CRM (up to 20 applications)</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> 5 AI Email generations / month</li>
-              </ul>
-              <Link href="/dashboard" className="block">
-                <Button variant="outline" className="w-full">Get Started</Button>
-              </Link>
-            </div>
+          <h2 className="text-3xl font-extrabold text-white">
+            For Law Schools, Student Bar Councils & Placement Cells
+          </h2>
 
-            {/* Pro */}
-            <div className="rounded-2xl border-2 border-blue-600 p-8 bg-white shadow-xl space-y-6 relative">
-              <div className="absolute -top-3.5 right-6 bg-blue-600 text-white text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                Most Popular
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">Clerkship & Litigation Pro</h3>
-                <p className="text-xs text-slate-500 mt-1">For senior NLU students, clerkship candidates, and junior advocates.</p>
-                <div className="mt-4 flex items-baseline">
-                  <span className="text-4xl font-black text-slate-900">₹499</span>
-                  <span className="text-xs text-slate-400 ml-1">/ month</span>
-                </div>
-              </div>
-              <ul className="text-xs text-slate-600 space-y-3">
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Everything in Starter</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Dedicated Judicial Center (SCI & All HCs)</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Unlimited AI Email & Memory Hook Engine</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Contact Intelligence & NLU Alumni Directory</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Automated Follow-up Reminder Sequencing</li>
-              </ul>
-              <Link href="/dashboard" className="block">
-                <Button className="w-full bg-blue-600 hover:bg-blue-700">Upgrade to Pro</Button>
-              </Link>
-            </div>
+          <p className="text-sm text-slate-400 max-w-2xl mx-auto leading-relaxed">
+            We do not sell commercial software licenses to educational institutions. Instead, Recruitment Coordination Committees (RCCs), deans, and senior advocate chambers partner with us via academic grant collaborations.
+          </p>
 
-            {/* NLU / Institution */}
-            <div className="rounded-2xl border border-slate-200 p-8 bg-white shadow-xs space-y-6">
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">NLU & RCC Cell</h3>
-                <p className="text-xs text-slate-500 mt-1">For Recruitment Coordination Committees and law university faculties.</p>
-                <div className="mt-4 flex items-baseline">
-                  <span className="text-3xl font-black text-slate-900">Custom</span>
-                  <span className="text-xs text-slate-400 ml-1">/ institutional</span>
-                </div>
-              </div>
-              <ul className="text-xs text-slate-600 space-y-3">
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> University Batch Management</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Centralized Placement Cell Analytics</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Verified Alumni Mentorship Routing</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Custom Firm & Chamber Job Postings</li>
-              </ul>
-              <a href="mailto:contact@jurisflow.tech" className="block">
-                <Button variant="outline" className="w-full">Contact for NLUs</Button>
-              </a>
-            </div>
+          <div className="pt-2">
+            <button
+              onClick={() => {
+                setSelectedTier("institutional");
+                setIsSuperThanksOpen(true);
+              }}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-all"
+            >
+              <School className="h-4 w-4" />
+              <span>Submit Institutional Access Request (NLU RCC Grant)</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </section>
 
       {/* ── FAQ SECTION ──────────────────────────────────────────── */}
-      <section id="faq" className="py-24 bg-slate-50 border-t border-slate-200/80">
+      <section id="faq" className="py-24 bg-slate-900 border-b border-slate-800">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-extrabold text-slate-950">
+            <h2 className="text-3xl font-extrabold text-white">
               Frequently Asked Questions
             </h2>
-            <p className="mt-2 text-slate-600 text-sm">
-              Everything you need to know about JurisFlow and legal career management.
+            <p className="mt-2 text-slate-400 text-xs sm:text-sm">
+              Answers regarding our anti-slop guidelines, YouPI-PG verification, and academic access.
             </p>
           </div>
 
@@ -472,21 +527,21 @@ export default function LandingPage() {
             {faqs.map((faq, idx) => (
               <div
                 key={idx}
-                className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-xs transition-all"
+                className="rounded-xl border border-slate-800 bg-slate-950 overflow-hidden shadow-xs transition-all"
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                  className="w-full p-5 text-left font-semibold text-slate-900 text-sm flex items-center justify-between hover:bg-slate-50/50"
+                  className="w-full p-4 sm:p-5 text-left font-semibold text-white text-xs sm:text-sm flex items-center justify-between hover:bg-slate-900/60"
                 >
                   <span>{faq.q}</span>
                   <ChevronDown
-                    className={`h-4 w-4 text-slate-500 transition-transform duration-200 ${
+                    className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${
                       openFaq === idx ? "rotate-180" : ""
                     }`}
                   />
                 </button>
                 {openFaq === idx && (
-                  <div className="px-5 pb-5 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
+                  <div className="px-5 pb-5 text-xs text-slate-400 leading-relaxed border-t border-slate-800/60 pt-3">
                     {faq.a}
                   </div>
                 )}
@@ -497,33 +552,48 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ───────────────────────────────────────────────── */}
-      <footer className="border-t border-slate-200 bg-white py-12 text-slate-500 text-xs">
+      <footer className="bg-slate-950 py-12 text-slate-500 text-xs border-t border-slate-800/80 pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">
-              <div className="h-7 w-7 rounded-lg bg-slate-900 text-white flex items-center justify-center">
+              <div className="h-7 w-7 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-bold">
                 <Scale className="h-4 w-4" />
               </div>
-              <span className="font-bold text-sm text-slate-900">JurisFlow</span>
-              <span className="text-slate-400">| The Career Operating System for Law Students</span>
+              <span className="font-bold text-sm text-white">JurisFlow</span>
+              <span className="text-slate-400">| Powered by djlexfolio.tech & NLU Delhi</span>
             </div>
 
-            <div className="flex items-center gap-6 text-slate-600">
-              <Link href="/dashboard" className="hover:text-slate-900">Dashboard</Link>
-              <Link href="/opportunities" className="hover:text-slate-900">Opportunities</Link>
-              <Link href="/judicial" className="hover:text-slate-900">Judicial Center</Link>
-              <Link href="/emails" className="hover:text-slate-900">Email Engine</Link>
-              <a href="https://github.com/DHANANAN/JurisFlow" target="_blank" rel="noreferrer" className="hover:text-slate-900">
-                GitHub Repository
+            <div className="flex items-center gap-6 text-slate-400 text-xs">
+              <Link href="/dashboard" className="hover:text-amber-400">Dashboard</Link>
+              <Link href="/opportunities" className="hover:text-amber-400">Opportunities</Link>
+              <Link href="/judicial" className="hover:text-amber-400">Judicial Center</Link>
+              <Link href="/login" className="hover:text-amber-400">Sign In</Link>
+              <a
+                href="https://github.com/DHANANAN/JurisFlow"
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-amber-400"
+              >
+                GitHub
               </a>
             </div>
 
-            <p className="text-slate-400">
-              © 2026 JurisFlow. Built with purpose for law students across India.
+            <p className="text-slate-500">
+              © 2026 JurisFlow. Dedicated to open access and legal scholarship.
             </p>
           </div>
         </div>
       </footer>
+
+      {/* ── CUTE HOVER-ACTIVATED BOTTOM NAVIGATION DOCK ────────── */}
+      <BottomDock />
+
+      {/* ── SUPERTHANKS / YOUPI-PG MODAL ───────────────────────── */}
+      <SuperThanksModal
+        isOpen={isSuperThanksOpen}
+        onClose={() => setIsSuperThanksOpen(false)}
+        defaultTier={selectedTier}
+      />
     </div>
   );
 }

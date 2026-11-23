@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import {
-  User,
+  User as UserIcon,
   Shield,
   Bell,
   Sparkles,
@@ -14,21 +15,50 @@ import {
   Globe,
   FileText,
   Key,
+  Heart,
+  Cloud,
+  QrCode,
+  Award,
+  LogIn,
+  LogOut,
+  Copy,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { currentUser } from "@/lib/data";
+import { getActiveUser, subscribeToAuth, setActiveUser, logoutCurrentUser } from "@/lib/firebase";
+import { User as UserType } from "@/lib/types";
+import { MembershipSticker } from "@/components/ui/membership-sticker";
+import { SuperThanksModal } from "@/components/superthanks/superthanks-modal";
+import { PRIMARY_UPI_ID } from "@/lib/payment-youpi";
 
 export default function SettingsPage() {
-  const [name, setName] = React.useState(currentUser.name);
-  const [email, setEmail] = React.useState(currentUser.email);
-  const [university, setUniversity] = React.useState(currentUser.university);
-  const [year, setYear] = React.useState(currentUser.year);
-  const [location, setLocation] = React.useState(currentUser.location || "Delhi NCR");
-  const [bio, setBio] = React.useState(currentUser.bio || "");
+  const [user, setUser] = React.useState<UserType | null>(null);
+  const [name, setName] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [university, setUniversity] = React.useState("");
+  const [year, setYear] = React.useState("");
+  const [location, setLocation] = React.useState("Delhi NCR");
+  const [bio, setBio] = React.useState("");
   const [saved, setSaved] = React.useState(false);
+  const [showSuperThanksModal, setShowSuperThanksModal] = React.useState(false);
+  const [copiedUpi, setCopiedUpi] = React.useState(false);
+
+  React.useEffect(() => {
+    const unsub = subscribeToAuth((u) => {
+      if (u) {
+        setUser(u);
+        setName(u.name);
+        setEmail(u.email);
+        setUniversity(u.university);
+        setYear(u.year);
+        setLocation(u.location || "Delhi NCR");
+        setBio(u.bio || "");
+      }
+    });
+    return unsub;
+  }, []);
 
   // Notification Toggles
   const [notifyDeadlines, setNotifyDeadlines] = React.useState(true);
@@ -44,11 +74,31 @@ export default function SettingsPage() {
     airtable: false,
     apify: true,
     firecrawl: false,
+    firebase: true,
+    gcp: true,
   });
 
   const handleSave = () => {
+    if (user) {
+      const updatedUser: UserType = {
+        ...user,
+        name,
+        email,
+        university,
+        year,
+        location,
+        bio,
+      };
+      setActiveUser(updatedUser);
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleCopyUpi = () => {
+    navigator.clipboard.writeText(PRIMARY_UPI_ID);
+    setCopiedUpi(true);
+    setTimeout(() => setCopiedUpi(false), 2000);
   };
 
   return (
@@ -78,7 +128,7 @@ export default function SettingsPage() {
         {/* ── CANDIDATE PROFILE SECTION ────────────────────────────── */}
         <div className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-5">
           <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-            <User className="h-5 w-5 text-blue-600" />
+            <UserIcon className="h-5 w-5 text-blue-600" />
             <h3 className="font-bold text-base text-slate-900">
               Candidate Persona & Academic Credentials
             </h3>
@@ -112,7 +162,7 @@ export default function SettingsPage() {
 
             <div>
               <label className="font-semibold text-slate-700 block mb-1">LinkedIn Profile</label>
-              <Input defaultValue={currentUser.linkedin} className="text-xs" />
+              <Input defaultValue={user?.linkedin || "linkedin.com/in/dhananjay-chouhan"} className="text-xs" />
             </div>
 
             <div className="sm:col-span-2">
@@ -123,6 +173,115 @@ export default function SettingsPage() {
                 onChange={(e) => setBio(e.target.value)}
                 className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+            </div>
+          </div>
+        </div>
+
+        {/* ── SUPERTHANKS & MEMBERSHIP BADGES SECTION ──────────────── */}
+        <div className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-6">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <Heart className="h-5 w-5 text-rose-500 fill-rose-500" />
+              <div>
+                <h3 className="font-bold text-base text-slate-900">
+                  SuperThanks Community Membership & Badges
+                </h3>
+                <p className="text-xs text-slate-500">
+                  YouTube-style membership stickers awarded for supporting open legal scrapers.
+                </p>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => setShowSuperThanksModal(true)}
+              className="bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-bold text-xs"
+            >
+              <Heart className="h-3.5 w-3.5 fill-white" />
+              <span>Contribute / Upgrade Tier</span>
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Active Badge Card */}
+            <div className="p-4 rounded-xl bg-slate-900 text-slate-100 border border-slate-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+                  Active Profile Badge
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  Verified Scholar
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-2xl flex items-center justify-center">
+                  {user?.contributorBadge?.icon || "🥇"}
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-white flex items-center gap-1.5">
+                    {user?.contributorBadge?.title || "Gold Patron & Founding Scholar"}
+                    <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                  </h4>
+                  <p className="text-xs text-slate-400 font-mono">
+                    Tier: {user?.contributorBadge?.tier.toUpperCase() || "GOLD"} • ₹{user?.contributorBadge?.amount || 499}
+                  </p>
+                </div>
+              </div>
+
+              {/* Earned stickers */}
+              <div className="pt-2 border-t border-slate-800 space-y-1.5">
+                <span className="text-[10px] uppercase font-mono text-slate-400 block">
+                  Earned Profile Stickers
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {(user?.stickers || ["NLU Delhi Scholar", "Supreme Court Fellow", "Gold Patron Member"]).map(
+                    (st, i) => (
+                      <span
+                        key={i}
+                        className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20"
+                      >
+                        ⭐ {st}
+                      </span>
+                    )
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* UPI Payment Gateway info */}
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 flex flex-col justify-between">
+              <div>
+                <span className="text-[11px] font-mono text-slate-500 uppercase tracking-wider block">
+                  Direct UPI Payment Channel (YouPI-PG)
+                </span>
+                <div className="flex items-center gap-2 mt-2 p-2 rounded-lg bg-white border border-slate-200">
+                  <span className="font-mono text-xs text-slate-900 font-bold flex-1 select-all">
+                    {PRIMARY_UPI_ID}
+                  </span>
+                  <button
+                    onClick={handleCopyUpi}
+                    className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700"
+                  >
+                    {copiedUpi ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                    <span>{copiedUpi ? "Copied" : "Copy"}</span>
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-500 mt-2">
+                  Powered by YouPI-PG protocol with UTR manual verification and instant profile sticker minting.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowSuperThanksModal(true)}
+                  className="w-full text-xs border-amber-300 text-amber-700 hover:bg-amber-50"
+                >
+                  <QrCode className="h-3.5 w-3.5 mr-1 text-amber-600" />
+                  <span>Show UPI QR Code & Tiers</span>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -183,6 +342,115 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* ── SUPERTHANKS & MEMBERSHIP BADGES SECTION ──────────────── */}
+        <div className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-6">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <Heart className="h-5 w-5 text-rose-500 fill-rose-500" />
+              <div>
+                <h3 className="font-bold text-base text-slate-900">
+                  SuperThanks Community Membership & Badges
+                </h3>
+                <p className="text-xs text-slate-500">
+                  YouTube-style membership stickers awarded for supporting open legal scrapers.
+                </p>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => setShowSuperThanksModal(true)}
+              className="bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-bold text-xs"
+            >
+              <Heart className="h-3.5 w-3.5 fill-white" />
+              <span>Contribute / Upgrade Tier</span>
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Active Badge Card */}
+            <div className="p-4 rounded-xl bg-slate-900 text-slate-100 border border-slate-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+                  Active Profile Badge
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  Verified Scholar
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-2xl flex items-center justify-center">
+                  {user?.contributorBadge?.icon || "🥇"}
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-white flex items-center gap-1.5">
+                    {user?.contributorBadge?.title || "Gold Patron & Founding Scholar"}
+                    <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                  </h4>
+                  <p className="text-xs text-slate-400 font-mono">
+                    Tier: {user?.contributorBadge?.tier.toUpperCase() || "GOLD"} • ₹{user?.contributorBadge?.amount || 499}
+                  </p>
+                </div>
+              </div>
+
+              {/* Earned stickers */}
+              <div className="pt-2 border-t border-slate-800 space-y-1.5">
+                <span className="text-[10px] uppercase font-mono text-slate-400 block">
+                  Earned Profile Stickers
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {(user?.stickers || ["NLU Delhi Scholar", "Supreme Court Fellow", "Gold Patron Member"]).map(
+                    (st, i) => (
+                      <span
+                        key={i}
+                        className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20"
+                      >
+                        ⭐ {st}
+                      </span>
+                    )
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* UPI Payment Gateway info */}
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 flex flex-col justify-between">
+              <div>
+                <span className="text-[11px] font-mono text-slate-500 uppercase tracking-wider block">
+                  Direct UPI Payment Channel (YouPI-PG)
+                </span>
+                <div className="flex items-center gap-2 mt-2 p-2 rounded-lg bg-white border border-slate-200">
+                  <span className="font-mono text-xs text-slate-900 font-bold flex-1 select-all">
+                    {PRIMARY_UPI_ID}
+                  </span>
+                  <button
+                    onClick={handleCopyUpi}
+                    className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700"
+                  >
+                    {copiedUpi ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                    <span>{copiedUpi ? "Copied" : "Copy"}</span>
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-500 mt-2">
+                  Powered by YouPI-PG protocol with UTR manual verification and instant profile sticker minting.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowSuperThanksModal(true)}
+                  className="w-full text-xs border-amber-300 text-amber-700 hover:bg-amber-50"
+                >
+                  <QrCode className="h-3.5 w-3.5 mr-1 text-amber-600" />
+                  <span>Show UPI QR Code & Tiers</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* ── NOTIFICATION PREFERENCES ─────────────────────────────── */}
         <div className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-4">
           <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
@@ -233,6 +501,12 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+
+        {/* SuperThanks Modal */}
+        <SuperThanksModal
+          isOpen={showSuperThanksModal}
+          onClose={() => setShowSuperThanksModal(false)}
+        />
       </div>
     </AppShell>
   );
