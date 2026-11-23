@@ -282,7 +282,7 @@ export function TransformableNav({ mobileOpen = false, onCloseMobile }: Transfor
 
       {/* Main Sidebar Shell */}
       <aside
-        className={`fixed inset-y-0 z-40 flex flex-col justify-between transition-all duration-200 border-stone-200/90 dark:border-slate-800/80 bg-white dark:bg-slate-950 ${sidebarWidth} ${positionClass} ${
+        className={`fixed inset-y-0 z-40 flex flex-col justify-between transition-all duration-200 border-stone-200/90 dark:border-slate-800/80 bg-white dark:bg-[#0a1122] ${sidebarWidth} ${positionClass} ${
           mobileOpen ? "translate-x-0" : layout === "right" ? "translate-x-full lg:translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >

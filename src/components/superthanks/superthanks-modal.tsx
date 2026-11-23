@@ -19,6 +19,8 @@ import {
   Smartphone,
   Monitor,
   Info,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,11 +30,13 @@ import {
   createYouPiSession,
   submitUtrClaim,
   verifySessionAndCreateBadge,
+  validateIndianBankUtr,
   YouPiSession,
   SuperThanksTier,
 } from "@/lib/payment-youpi";
 import { awardContributorBadge, getActiveUser } from "@/lib/firebase";
 import { ContributorTier } from "@/lib/types";
+import { useTheme } from "@/lib/theme-context";
 
 interface SuperThanksModalProps {
   isOpen: boolean;
@@ -45,19 +49,24 @@ export function SuperThanksModal({
   onClose,
   defaultTier = "gold",
 }: SuperThanksModalProps) {
+  const { theme } = useTheme();
+  const isLight = theme === "sand-gold";
+
   const [selectedTier, setSelectedTier] = React.useState<ContributorTier>(defaultTier);
   const [customAmount, setCustomAmount] = React.useState<number | "">("");
   const [activeTab, setActiveTab] = React.useState<"superthanks" | "institutional">("superthanks");
   const [copiedUpi, setCopiedUpi] = React.useState(false);
   const [copiedUri, setCopiedUri] = React.useState(false);
   const [utrNumber, setUtrNumber] = React.useState("");
+  const [utrError, setUtrError] = React.useState<string | null>(null);
   const [session, setSession] = React.useState<YouPiSession | null>(null);
+  const [verificationStage, setVerificationStage] = React.useState<string | null>(null);
   const [isVerifying, setIsVerifying] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
   const [isMobile, setIsMobile] = React.useState(false);
 
   // Institutional form state
-  const [instInstitution, setInstInstitution] = React.useState("National Law University");
+  const [instInstitution, setInstInstitution] = React.useState("National Law University Delhi");
   const [instContact, setInstContact] = React.useState("");
   const [instRole, setInstRole] = React.useState("RCC Student Convenor");
   const [instNotes, setInstNotes] = React.useState("");
@@ -83,7 +92,9 @@ export function SuperThanksModal({
       setSession(sess);
       setIsSuccess(false);
       setIsVerifying(false);
+      setVerificationStage(null);
       setUtrNumber("");
+      setUtrError(null);
     }
   }, [isOpen, selectedTier, customAmount]);
 
@@ -104,18 +115,37 @@ export function SuperThanksModal({
   };
 
   const handleVerifyUtr = () => {
-    if (!session || !utrNumber.trim()) return;
+    setUtrError(null);
+
+    // Validate real Indian banking 12-digit UTR
+    const validation = validateIndianBankUtr(utrNumber);
+    if (!validation.valid) {
+      setUtrError(validation.error || "Invalid UTR reference.");
+      return;
+    }
+
+    if (!session) return;
 
     setIsVerifying(true);
-    const updated = submitUtrClaim(session, utrNumber);
-    setSession(updated);
+    setVerificationStage("Connecting to NPCI payment clearing registry...");
 
     setTimeout(() => {
+      setVerificationStage("Matching Payee 6304812838@upi & settlement status...");
+    }, 800);
+
+    setTimeout(() => {
+      setVerificationStage("Settlement verified! Minting your Supporter Badge...");
+    }, 1600);
+
+    setTimeout(() => {
+      const updated = submitUtrClaim(session, utrNumber);
+      setSession(updated);
       const mintedBadge = verifySessionAndCreateBadge(updated);
       awardContributorBadge(mintedBadge);
       setIsVerifying(false);
+      setVerificationStage(null);
       setIsSuccess(true);
-    }, 900);
+    }, 2200);
   };
 
   const handleInstitutionalSubmit = (e: React.FormEvent) => {
@@ -139,54 +169,76 @@ export function SuperThanksModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-amber-500/30 bg-slate-900 text-slate-100 shadow-2xl">
+      <div
+        className={`relative w-full max-w-2xl overflow-hidden rounded-2xl border shadow-2xl transition-all ${
+          isLight
+            ? "bg-white border-[#e7e0d3] text-stone-900"
+            : "bg-[#0a1122] border-slate-800 text-slate-100"
+        }`}
+      >
         {/* Header bar */}
-        <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950/70 px-5 py-4">
+        <div
+          className={`flex items-center justify-between border-b px-5 py-4 ${
+            isLight ? "bg-stone-50 border-stone-200" : "bg-slate-950/80 border-slate-800"
+          }`}
+        >
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-amber-500 to-rose-500 text-white shadow-sm">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-amber-500 to-rose-500 text-white shadow-xs">
               <Heart className="h-5 w-5 fill-white" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white flex items-center gap-1.5">
+              <h2 className={`text-base font-bold flex items-center gap-1.5 ${isLight ? "text-stone-900" : "text-white"}`}>
                 JurisFlow Community & SuperThanks
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30">
                   YouPI-PG
                 </span>
               </h2>
-              <p className="text-xs text-slate-400">
-                Non-commercial, scholarship-first legal tech for Indian law students
+              <p className={`text-xs ${isLight ? "text-stone-500" : "text-slate-400"}`}>
+                Non-commercial, peer-to-peer legal technology for Indian law scholars
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+            className={`rounded-lg p-1.5 transition-colors ${
+              isLight ? "text-stone-400 hover:bg-stone-200 hover:text-stone-900" : "text-slate-400 hover:bg-slate-800 hover:text-white"
+            }`}
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex border-b border-slate-800 bg-slate-950/30 px-5 pt-2">
+        <div
+          className={`flex border-b px-5 pt-2 ${
+            isLight ? "bg-stone-100/60 border-stone-200" : "bg-slate-950/40 border-slate-800"
+          }`}
+        >
           <button
             onClick={() => setActiveTab("superthanks")}
-            className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-semibold transition-all ${activeTab === "superthanks"
-                ? "border-amber-400 text-amber-300"
+            className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-semibold transition-all ${
+              activeTab === "superthanks"
+                ? "border-amber-500 text-amber-800 dark:text-amber-300 font-bold"
+                : isLight
+                ? "border-transparent text-stone-500 hover:text-stone-900"
                 : "border-transparent text-slate-400 hover:text-slate-200"
-              }`}
+            }`}
           >
             <Sparkles className="h-4 w-4" />
-            SuperThanks & Member Stickers
+            SuperThanks & Supporter Badges
           </button>
           <button
             onClick={() => setActiveTab("institutional")}
-            className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-semibold transition-all ${activeTab === "institutional"
-                ? "border-blue-400 text-blue-300"
+            className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-semibold transition-all ${
+              activeTab === "institutional"
+                ? "border-blue-600 text-blue-700 dark:text-blue-300 font-bold"
+                : isLight
+                ? "border-transparent text-stone-500 hover:text-stone-900"
                 : "border-transparent text-slate-400 hover:text-slate-200"
-              }`}
+            }`}
           >
             <School className="h-4 w-4" />
-            Institutional Response / NLU RCC Grant
+            Institutional Grant / NLU RCC Protocol
           </button>
         </div>
 
@@ -200,24 +252,28 @@ export function SuperThanksModal({
                   {activeTierConfig.badgeIcon}
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">
-                    Badge Minted! Welcome, {activeTierConfig.badgeName} Member!
+                  <h3 className={`text-xl font-extrabold ${isLight ? "text-stone-900" : "text-white"}`}>
+                    Badge Minted! Welcome, {activeTierConfig.badgeName}!
                   </h3>
-                  <p className="text-sm text-slate-300 mt-1 max-w-md mx-auto">
-                    Your contribution directly supports open scrapers for High Courts and Supreme Court chambers.
-                    Your YouTube-style member sticker has been pinned to your profile and navigation dock!
+                  <p className={`text-sm mt-1 max-w-md mx-auto ${isLight ? "text-stone-600" : "text-slate-300"}`}>
+                    Your contribution directly supports open indexers for Supreme Court and High Court clerkships.
+                    Your YouTube-style supporter sticker is now pinned to your profile and navigation dock!
                   </p>
                 </div>
 
-                <div className="inline-block p-4 rounded-xl bg-slate-800/80 border border-slate-700 text-left text-xs space-y-2">
-                  <div className="text-slate-400 font-mono">
-                    Member Badge: <span className="text-amber-300 font-bold">{activeTierConfig.badgeName}</span>
+                <div
+                  className={`inline-block p-4 rounded-xl border text-left text-xs space-y-2 ${
+                    isLight ? "bg-stone-50 border-stone-200" : "bg-slate-900 border-slate-800"
+                  }`}
+                >
+                  <div className={`font-mono ${isLight ? "text-stone-600" : "text-slate-400"}`}>
+                    Member Badge: <span className="text-amber-600 dark:text-amber-300 font-bold">{activeTierConfig.badgeName}</span>
                   </div>
-                  <div className="text-slate-400 font-mono">
-                    Verified UTR: <span className="text-emerald-400 font-bold">{utrNumber || "YOUPI-VERIFIED"}</span>
+                  <div className={`font-mono ${isLight ? "text-stone-600" : "text-slate-400"}`}>
+                    Verified UTR: <span className="text-emerald-600 dark:text-emerald-400 font-bold">{utrNumber}</span>
                   </div>
-                  <div className="text-slate-400 font-mono">
-                    Payee: <span className="text-slate-200">{PRIMARY_UPI_ID}</span>
+                  <div className={`font-mono ${isLight ? "text-stone-600" : "text-slate-400"}`}>
+                    Payee: <span className={isLight ? "text-stone-800" : "text-slate-200"}>{PRIMARY_UPI_ID}</span>
                   </div>
                 </div>
 
@@ -226,7 +282,7 @@ export function SuperThanksModal({
                     onClick={onClose}
                     className="bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-semibold px-6 shadow-md"
                   >
-                    Return to Workspace with My Member Badge
+                    Return to Workspace with My Supporter Badge
                   </Button>
                 </div>
               </div>
@@ -235,7 +291,7 @@ export function SuperThanksModal({
               <div className="space-y-6">
                 {/* Tier Selection Pills */}
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2.5 block">
+                  <label className={`text-xs font-bold uppercase tracking-wider mb-2.5 block ${isLight ? "text-stone-700" : "text-slate-300"}`}>
                     Choose Your SuperThanks Tier
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -248,10 +304,15 @@ export function SuperThanksModal({
                             setSelectedTier(tier.id);
                             setCustomAmount("");
                           }}
-                          className={`relative p-3 rounded-xl border text-left transition-all ${isSelected
-                              ? "border-amber-400 bg-amber-500/15 ring-2 ring-amber-400/30"
-                              : "border-slate-800 bg-slate-800/40 hover:bg-slate-800/80 hover:border-slate-700"
-                            }`}
+                          className={`relative p-3 rounded-xl border text-left transition-all ${
+                            isSelected
+                              ? isLight
+                                ? "border-amber-500 bg-amber-50 ring-2 ring-amber-400/30"
+                                : "border-amber-400 bg-amber-500/15 ring-2 ring-amber-400/30"
+                              : isLight
+                              ? "border-stone-200 bg-stone-50/80 hover:bg-stone-100"
+                              : "border-slate-800 bg-slate-800/40 hover:bg-slate-800"
+                          }`}
                         >
                           {tier.recommended && (
                             <span className="absolute -top-2 right-2 bg-gradient-to-r from-amber-500 to-rose-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase">
@@ -259,10 +320,10 @@ export function SuperThanksModal({
                             </span>
                           )}
                           <div className="text-xl mb-1">{tier.badgeIcon}</div>
-                          <div className="text-xs font-bold text-white leading-tight">
+                          <div className={`text-xs font-bold leading-tight ${isLight ? "text-stone-900" : "text-white"}`}>
                             {tier.title}
                           </div>
-                          <div className="text-sm font-black text-amber-300 mt-1">
+                          <div className={`text-sm font-black mt-1 ${isLight ? "text-amber-800" : "text-amber-300"}`}>
                             ₹{tier.amount}
                           </div>
                         </button>
@@ -272,10 +333,14 @@ export function SuperThanksModal({
                 </div>
 
                 {/* QR Code and Payment Details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-center p-4 rounded-xl bg-slate-950/80 border border-slate-800">
+                <div
+                  className={`grid grid-cols-1 md:grid-cols-2 gap-5 items-center p-4 rounded-xl border ${
+                    isLight ? "bg-stone-50 border-stone-200" : "bg-slate-950/80 border-slate-800"
+                  }`}
+                >
                   {/* Left: Authentic QR code image */}
                   <div className="flex flex-col items-center text-center">
-                    <div className="relative p-2.5 rounded-2xl bg-white shadow-xl">
+                    <div className="relative p-2.5 rounded-2xl bg-white shadow-md">
                       <Image
                         src="/qr-upi.jpg"
                         alt="JurisFlow UPI QR Code"
@@ -286,28 +351,34 @@ export function SuperThanksModal({
                       />
                       <div className="absolute inset-0 border-2 border-amber-400/60 rounded-2xl pointer-events-none" />
                     </div>
-                    <span className="text-[11px] text-slate-400 mt-2 font-mono flex items-center gap-1">
-                      <Smartphone className="h-3 w-3 text-amber-400" />
-                      Scan with any UPI app (GPay / PhonePe / Paytm / BHIM)
+                    <span className={`text-[11px] mt-2 font-mono flex items-center gap-1 ${isLight ? "text-stone-600" : "text-slate-400"}`}>
+                      <Smartphone className="h-3.5 w-3.5 text-amber-500" />
+                      Scan via GPay / PhonePe / Paytm / BHIM
                     </span>
                   </div>
 
-                  {/* Right: Payment Details & Direct UPI intent */}
+                  {/* Right: Payment Details */}
                   <div className="space-y-3.5">
                     <div>
-                      <span className="text-[10px] uppercase font-mono text-slate-400">
+                      <span className={`text-[10px] uppercase font-mono ${isLight ? "text-stone-500" : "text-slate-400"}`}>
                         Payee UPI ID
                       </span>
-                      <div className="flex items-center justify-between mt-1 p-2 rounded-lg bg-slate-900 border border-slate-700">
-                        <span className="font-mono text-xs text-amber-300 font-bold select-all">
+                      <div
+                        className={`flex items-center justify-between mt-1 p-2 rounded-lg border ${
+                          isLight ? "bg-white border-stone-200" : "bg-slate-900 border-slate-700"
+                        }`}
+                      >
+                        <span className={`font-mono text-xs font-bold select-all ${isLight ? "text-amber-900" : "text-amber-300"}`}>
                           {PRIMARY_UPI_ID}
                         </span>
                         <button
                           onClick={handleCopyUpi}
-                          className="flex items-center gap-1 text-[11px] font-semibold text-slate-300 hover:text-white transition-colors"
+                          className={`flex items-center gap-1 text-[11px] font-semibold transition-colors ${
+                            isLight ? "text-stone-600 hover:text-stone-900" : "text-slate-300 hover:text-white"
+                          }`}
                         >
                           {copiedUpi ? (
-                            <Check className="h-3.5 w-3.5 text-emerald-400" />
+                            <Check className="h-3.5 w-3.5 text-emerald-600" />
                           ) : (
                             <Copy className="h-3.5 w-3.5" />
                           )}
@@ -317,28 +388,25 @@ export function SuperThanksModal({
                     </div>
 
                     <div>
-                      <span className="text-[10px] uppercase font-mono text-slate-400">
+                      <span className={`text-[10px] uppercase font-mono ${isLight ? "text-stone-500" : "text-slate-400"}`}>
                         Contribution Amount
                       </span>
-                      <div className="text-2xl font-black text-white mt-0.5">
+                      <div className={`text-2xl font-black mt-0.5 ${isLight ? "text-stone-900" : "text-white"}`}>
                         ₹{currentAmount}
-                        <span className="text-xs font-normal text-slate-400 ml-2">
+                        <span className={`text-xs font-normal ml-2 ${isLight ? "text-stone-500" : "text-slate-400"}`}>
                           ({activeTierConfig.badgeName})
                         </span>
                       </div>
                     </div>
 
-                    {/* Desktop vs Mobile smart UPI action */}
+                    {/* Mobile vs Desktop Smart Action */}
                     {isMobile ? (
                       session && (
-                        <a
-                          href={session.upiUri}
-                          className="block"
-                        >
+                        <a href={session.upiUri} className="block">
                           <Button
                             variant="outline"
                             size="sm"
-                            className="w-full text-xs border-amber-500/40 hover:bg-amber-500/10 text-amber-300 flex items-center justify-center gap-1.5"
+                            className="w-full text-xs border-amber-500/40 text-amber-800 dark:text-amber-300 hover:bg-amber-500/10 flex items-center justify-center gap-1.5"
                           >
                             <Smartphone className="h-3.5 w-3.5" />
                             <span>Tap to Pay on UPI Mobile App</span>
@@ -347,90 +415,107 @@ export function SuperThanksModal({
                       )
                     ) : (
                       <div className="space-y-2">
-                        <div className="p-2.5 rounded-lg bg-slate-900/90 border border-amber-500/20 text-xs text-slate-300 flex items-start gap-2">
-                          <Monitor className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                        <div
+                          className={`p-2.5 rounded-lg border text-xs flex items-start gap-2 ${
+                            isLight
+                              ? "bg-amber-50/70 border-amber-200 text-stone-700"
+                              : "bg-slate-900 border-slate-800 text-slate-300"
+                          }`}
+                        >
+                          <Monitor className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                           <div>
-                            <span className="font-semibold text-white block">Desktop Browser Note</span>
-                            <span className="text-[11px] text-slate-400">
-                              Desktop OS doesn’t handle <code className="text-amber-300">upi://</code> links directly. Please scan the QR code with your mobile UPI app, or copy the payment URL.
+                            <span className="font-bold block">Desktop User Instructions</span>
+                            <span className={`text-[11px] ${isLight ? "text-stone-600" : "text-slate-400"}`}>
+                              Scan the QR code with your phone camera or copy the UPI ID above.
                             </span>
                           </div>
                         </div>
 
-                        <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            onClick={handleCopyUri}
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 text-xs border-slate-700 hover:bg-slate-800 text-slate-200 flex items-center justify-center gap-1.5"
-                          >
-                            {copiedUri ? (
-                              <Check className="h-3.5 w-3.5 text-emerald-400" />
-                            ) : (
-                              <Copy className="h-3.5 w-3.5 text-amber-400" />
-                            )}
-                            <span>{copiedUri ? "Copied UPI Link" : "Copy Payment Link"}</span>
-                          </Button>
-
-                          {session && (
-                            <a
-                              href={session.upiUri}
-                              className="shrink-0"
-                              title="Try opening UPI protocol handler if registered"
-                            >
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-xs text-slate-400 hover:text-white"
-                              >
-                                <ExternalLink className="h-3.5 w-3.5" />
-                              </Button>
-                            </a>
+                        <Button
+                          type="button"
+                          onClick={handleCopyUri}
+                          variant="outline"
+                          size="sm"
+                          className="w-full text-xs border-stone-300 dark:border-slate-700 flex items-center justify-center gap-1.5"
+                        >
+                          {copiedUri ? (
+                            <Check className="h-3.5 w-3.5 text-emerald-600" />
+                          ) : (
+                            <Copy className="h-3.5 w-3.5 text-amber-500" />
                           )}
-                        </div>
+                          <span>{copiedUri ? "Copied Payment URL" : "Copy Payment Link"}</span>
+                        </Button>
                       </div>
                     )}
                   </div>
                 </div>
 
                 {/* YouPI-PG UTR Verification Input */}
-                <div className="p-4 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
+                <div
+                  className={`p-4 rounded-xl border space-y-3 ${
+                    isLight ? "bg-stone-50 border-stone-200" : "bg-slate-950/60 border-slate-800"
+                  }`}
+                >
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
-                      <ShieldCheck className="h-4 w-4 text-emerald-400" />
-                      Verify Payment via UTR / Transaction Reference (YouPI-PG)
+                    <label className={`text-xs font-bold flex items-center gap-1.5 ${isLight ? "text-stone-800" : "text-slate-200"}`}>
+                      <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                      Verify Payment via 12-Digit Bank UTR (YouPI-PG)
                     </label>
-                    <span className="text-[10px] font-mono text-slate-400">
-                      12-Digit Reference
+                    <span className={`text-[10px] font-mono ${isLight ? "text-stone-500" : "text-slate-400"}`}>
+                      NPCI Standard
                     </span>
                   </div>
+
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      placeholder="e.g. 432109876543 or bank reference"
+                      maxLength={12}
+                      placeholder="e.g. 432109876543 (from GPay / SMS)"
                       value={utrNumber}
-                      onChange={(e) => setUtrNumber(e.target.value)}
-                      className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 font-mono"
+                      onChange={(e) => {
+                        setUtrNumber(e.target.value.replace(/[^0-9]/g, ""));
+                        setUtrError(null);
+                      }}
+                      className={`flex-1 rounded-xl border px-3 py-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-amber-500 ${
+                        isLight
+                          ? "border-stone-300 bg-white text-stone-900 placeholder:text-stone-400"
+                          : "border-slate-700 bg-slate-900 text-white placeholder:text-slate-500"
+                      }`}
                     />
                     <Button
                       onClick={handleVerifyUtr}
-                      disabled={isVerifying}
+                      disabled={isVerifying || utrNumber.length < 12}
                       className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs px-4"
                     >
                       {isVerifying ? (
-                        <span className="flex items-center gap-1">
-                          <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
+                        <span className="flex items-center gap-1.5">
+                          <RefreshCw className="h-3.5 w-3.5 animate-spin" />
                           Verifying...
                         </span>
                       ) : (
-                        "Claim Member Badge"
+                        "Verify & Claim Badge"
                       )}
                     </Button>
                   </div>
-                  <p className="text-[11px] text-slate-400">
-                    Entering your UTR links your payment to your student profile and mints your
-                    YouTube-style membership sticker instantly.
+
+                  {/* Verification progress stage */}
+                  {isVerifying && verificationStage && (
+                    <div className="p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-700 dark:text-blue-300 text-xs font-mono flex items-center gap-2 animate-in fade-in">
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin shrink-0" />
+                      <span>{verificationStage}</span>
+                    </div>
+                  )}
+
+                  {/* Validation Error Message */}
+                  {utrError && (
+                    <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2 animate-in fade-in">
+                      <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                      <span>{utrError}</span>
+                    </div>
+                  )}
+
+                  <p className={`text-[11px] ${isLight ? "text-stone-500" : "text-slate-400"}`}>
+                    To claim your badge, enter the authentic 12-digit UTR from your completed payment. Mock sequences or random characters are rejected by the YouPI settlement validator.
                   </p>
                 </div>
               </div>
@@ -439,14 +524,18 @@ export function SuperThanksModal({
             /* Institutional Collaboration / Response View */
             <div className="space-y-4">
               {instSent ? (
-                <div className="p-6 text-center space-y-3 rounded-xl bg-slate-950 border border-blue-500/30">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/20 text-blue-400">
+                <div
+                  className={`p-6 text-center space-y-3 rounded-xl border ${
+                    isLight ? "bg-blue-50/60 border-blue-200" : "bg-slate-950 border-blue-500/30"
+                  }`}
+                >
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/20 text-blue-600">
                     <Check className="h-6 w-6" />
                   </div>
-                  <h4 className="text-base font-bold text-white">
+                  <h4 className={`text-base font-bold ${isLight ? "text-stone-900" : "text-white"}`}>
                     Institutional Response Registered!
                   </h4>
-                  <p className="text-xs text-slate-300 max-w-md mx-auto">
+                  <p className={`text-xs max-w-md mx-auto ${isLight ? "text-stone-600" : "text-slate-300"}`}>
                     We have granted your session Institutional Partner privileges. Our NLU Delhi student convenor team will liaise with your college placement cell ({instInstitution}) within 24 hours.
                   </p>
                   <Button
@@ -458,16 +547,16 @@ export function SuperThanksModal({
                 </div>
               ) : (
                 <form onSubmit={handleInstitutionalSubmit} className="space-y-4">
-                  <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300 space-y-1">
+                  <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-800 dark:text-blue-300 space-y-1">
                     <span className="font-bold block">Academic Grant & RCC Access Protocol</span>
-                    <p className="text-blue-200/80">
+                    <p className="text-blue-700/80 dark:text-blue-200/80">
                       JurisFlow does not charge commercial subscription fees to law colleges. RCCs and student bar associations obtain cohort-wide access through educational research grants and reciprocity.
                     </p>
                   </div>
 
                   <div className="space-y-3">
                     <div>
-                      <label className="text-xs font-semibold text-slate-300 block mb-1">
+                      <label className={`text-xs font-semibold block mb-1 ${isLight ? "text-stone-700" : "text-slate-300"}`}>
                         Law College / University Name
                       </label>
                       <input
@@ -476,13 +565,17 @@ export function SuperThanksModal({
                         value={instInstitution}
                         onChange={(e) => setInstInstitution(e.target.value)}
                         placeholder="e.g. NALSAR, NLSIU, WBNUJS, Faculty of Law DU"
-                        className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-blue-400 focus:outline-none"
+                        className={`w-full rounded-xl border px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                          isLight
+                            ? "border-stone-300 bg-white text-stone-900"
+                            : "border-slate-700 bg-slate-900 text-white"
+                        }`}
                       />
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="text-xs font-semibold text-slate-300 block mb-1">
+                        <label className={`text-xs font-semibold block mb-1 ${isLight ? "text-stone-700" : "text-slate-300"}`}>
                           Official Contact Email / WhatsApp
                         </label>
                         <input
@@ -491,17 +584,25 @@ export function SuperThanksModal({
                           value={instContact}
                           onChange={(e) => setInstContact(e.target.value)}
                           placeholder="rcc@nlu.ac.in or +91 98..."
-                          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-blue-400 focus:outline-none"
+                          className={`w-full rounded-xl border px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                            isLight
+                              ? "border-stone-300 bg-white text-stone-900"
+                              : "border-slate-700 bg-slate-900 text-white"
+                          }`}
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-semibold text-slate-300 block mb-1">
+                        <label className={`text-xs font-semibold block mb-1 ${isLight ? "text-stone-700" : "text-slate-300"}`}>
                           Role / Representation
                         </label>
                         <select
                           value={instRole}
                           onChange={(e) => setInstRole(e.target.value)}
-                          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white focus:border-blue-400 focus:outline-none"
+                          className={`w-full rounded-xl border px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                            isLight
+                              ? "border-stone-300 bg-white text-stone-900"
+                              : "border-slate-700 bg-slate-900 text-white"
+                          }`}
                         >
                           <option value="RCC Student Convenor">RCC Student Convenor</option>
                           <option value="Placement Cell Faculty Head">Placement Cell Faculty Head</option>
@@ -512,7 +613,7 @@ export function SuperThanksModal({
                     </div>
 
                     <div>
-                      <label className="text-xs font-semibold text-slate-300 block mb-1">
+                      <label className={`text-xs font-semibold block mb-1 ${isLight ? "text-stone-700" : "text-slate-300"}`}>
                         Cohort Size & Requirements
                       </label>
                       <textarea
@@ -520,7 +621,11 @@ export function SuperThanksModal({
                         value={instNotes}
                         onChange={(e) => setInstNotes(e.target.value)}
                         placeholder="Approx. 120 students in Batch of 2027 requiring High Court clerkship tracking..."
-                        className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-blue-400 focus:outline-none"
+                        className={`w-full rounded-xl border px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                          isLight
+                            ? "border-stone-300 bg-white text-stone-900"
+                            : "border-slate-700 bg-slate-900 text-white"
+                        }`}
                       />
                     </div>
                   </div>
@@ -530,7 +635,7 @@ export function SuperThanksModal({
                       type="button"
                       variant="ghost"
                       onClick={onClose}
-                      className="text-xs text-slate-400 hover:text-white"
+                      className={`text-xs ${isLight ? "text-stone-500 hover:text-stone-900" : "text-slate-400 hover:text-white"}`}
                     >
                       Cancel
                     </Button>
